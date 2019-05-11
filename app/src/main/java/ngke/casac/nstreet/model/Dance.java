@@ -16,18 +16,16 @@ public class Dance extends DanceObject {
 
     // DanceContract
 
-    public static class DanceContract extends ContractTemplate {
+    public static class Contract extends ContractTemplate {
         public static final String TABLE_NAME = "dance_table";
         public static final String COL_CATEGORY_ID = "category";
 
-        @Override
-        protected String getTableName() {
-            return TABLE_NAME;
+        public static String getInitSQL() {
+            return getCreateTableSQL(TABLE_NAME, COL_CATEGORY_ID + " INTEGER, ");
         }
 
-        @Override
-        protected String getNewColumnSQLString() {
-            return COL_CATEGORY_ID + " INTEGER, ";
+        public static String getDestroySQL() {
+            return getDeleteTableSQL(TABLE_NAME);
         }
 
 

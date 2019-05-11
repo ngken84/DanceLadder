@@ -10,17 +10,15 @@ public class Category extends DanceObject {
         super(category);
     }
 
-    public class CategoryContract extends ContractTemplate {
+    public static class Contract extends ContractTemplate {
         public static final String TABLE_NAME = "category_table";
 
-        @Override
-        protected String getTableName() {
-            return TABLE_NAME;
+        public static String getInitSQL() {
+            return getCreateTableSQL(TABLE_NAME, "");
         }
 
-        @Override
-        protected String getNewColumnSQLString() {
-            return "";
+        public static String getDestroySQL() {
+            return getDeleteTableSQL(TABLE_NAME);
         }
 
     }

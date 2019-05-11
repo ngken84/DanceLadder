@@ -9,23 +9,17 @@ public abstract class ContractTemplate implements BaseColumns {
     public static final String COL_DATE_CREATED = "date_created";
     public static final String COL_DATE_MODIFIED = "date_modified";
 
-    protected abstract String getTableName();
-
-    protected abstract String getNewColumnSQLString();
-
-    public String getCreateTableSQL() {
-        return "CREATE TABLE " + getTableName() + " (" +
+    protected static String getCreateTableSQL(String tableName, String extraSQL) {
+        return "CREATE TABLE " + tableName + " (" +
                 _ID + " INTEGER PRIMARY KEY, " +
                 COL_NAME + " TEXT, " +
-                getNewColumnSQLString() +
+                extraSQL +
                 COL_STARRED + " INTEGER, " +
                 COL_DATE_CREATED + " INTEGER, " +
                 COL_DATE_MODIFIED + " INTEGER)";
     }
 
-
-
-    public String getDeleteTableSQL() {
-        return "DROP TABLE IF EXISTS " + getTableName();
+    protected static String getDeleteTableSQL(String tableName) {
+        return "DROP TABLE IF EXISTS " + tableName;
     }
 }
