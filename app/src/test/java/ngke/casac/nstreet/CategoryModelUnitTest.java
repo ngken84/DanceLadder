@@ -13,6 +13,6 @@ public class CategoryModelUnitTest {
         String categoryName = "Swing";
         Category category = new Category(categoryName);
 
-        assertEquals(categoryName  , category.getName());
+        assertEquals(categoryName, category.getName());
     }
 }

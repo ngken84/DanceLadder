@@ -2,9 +2,13 @@ package ngke.casac.nstreet.model.template;
 
 import java.util.Comparator;
 
+import ngke.casac.nstreet.model.Dance;
+
 public abstract class DanceSubItem extends DanceObject {
 
-    int orderNumber;
+    private int orderNumber;
+    private int rating;
+    private Dance dance;
 
     public int getOrderNumber() {
         return orderNumber;
@@ -14,7 +18,23 @@ public abstract class DanceSubItem extends DanceObject {
         this.orderNumber = orderNumber;
     }
 
-    public static class DanceSubItemComparator implements Comparator<DanceSubItem> {
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    public Dance getDance() {
+        return dance;
+    }
+
+    public void setDance(Dance dance) {
+        this.dance = dance;
+    }
+
+    public static class DanceSubItemOrderComparator implements Comparator<DanceSubItem> {
 
         @Override
         public int compare(DanceSubItem t0, DanceSubItem t1) {
