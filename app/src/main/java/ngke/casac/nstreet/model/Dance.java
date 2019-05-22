@@ -28,7 +28,17 @@ public class Dance extends DanceObject {
             return getDeleteTableSQL(TABLE_NAME);
         }
 
-
+        public static String[] getProjection() {
+            String[] projection = {
+                    _ID,
+                    COL_NAME,
+                    COL_CATEGORY_ID,
+                    COL_DATE_CREATED,
+                    COL_DATE_MODIFIED,
+                    COL_STARRED
+            };
+            return projection;
+        }
     }
 
     // GETTERS & SETTERS
