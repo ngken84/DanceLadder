@@ -6,6 +6,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import ngke.casac.nstreet.model.Category;
 import ngke.casac.nstreet.model.Dance;
+import ngke.casac.nstreet.model.DanceMove;
+import ngke.casac.nstreet.model.DanceMoveStep;
+import ngke.casac.nstreet.model.Lesson;
+import ngke.casac.nstreet.model.Location;
+import ngke.casac.nstreet.model.Note;
+import ngke.casac.nstreet.model.Teacher;
 
 public class DanceSQLHelper extends SQLiteOpenHelper {
 
@@ -21,6 +27,12 @@ public class DanceSQLHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         sqLiteDatabase.execSQL(Dance.Contract.getInitSQL());
         sqLiteDatabase.execSQL(Category.Contract.getInitSQL());
+        sqLiteDatabase.execSQL(DanceMove.Contract.getInitSQL());
+        sqLiteDatabase.execSQL(DanceMoveStep.Contract.getInitSQL());
+        sqLiteDatabase.execSQL(Note.Contract.getInitSQL());
+        sqLiteDatabase.execSQL(Lesson.Contract.getInitSQL());
+        sqLiteDatabase.execSQL(Teacher.Contract.getInitSQL());
+        sqLiteDatabase.execSQL(Location.Contract.getInitSQL());
     }
 
     @Override
@@ -32,5 +44,30 @@ public class DanceSQLHelper extends SQLiteOpenHelper {
         //Category
         sqLiteDatabase.execSQL(Category.Contract.getDestroySQL());
         sqLiteDatabase.execSQL(Category.Contract.getInitSQL());
+
+        //Dance Move
+        sqLiteDatabase.execSQL(DanceMove.Contract.getDestroySQL());
+        sqLiteDatabase.execSQL(DanceMove.Contract.getInitSQL());
+
+        //Dance Move Step
+        sqLiteDatabase.execSQL(DanceMoveStep.Contract.getDestroySQL());
+        sqLiteDatabase.execSQL(DanceMoveStep.Contract.getInitSQL());
+
+        //Note
+        sqLiteDatabase.execSQL(Note.Contract.getDestroySQL());
+        sqLiteDatabase.execSQL(Note.Contract.getInitSQL());
+
+        //Lessons
+        sqLiteDatabase.execSQL(Lesson.Contract.getDestroySQL());
+        sqLiteDatabase.execSQL(Lesson.Contract.getInitSQL());
+
+        //Teacher
+        sqLiteDatabase.execSQL(Teacher.Contract.getDestroySQL());
+        sqLiteDatabase.execSQL(Teacher.Contract.getInitSQL());
+
+        //Location
+        sqLiteDatabase.execSQL(Location.Contract.getDestroySQL());
+        sqLiteDatabase.execSQL(Location.Contract.getInitSQL());
+
     }
 }

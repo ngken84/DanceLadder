@@ -54,4 +54,6 @@ public abstract class DanceObject {
     public void setDateModified(Date dateModified) {
         this.dateModified = dateModified;
     }
+
+    public abstract String getType();
 }

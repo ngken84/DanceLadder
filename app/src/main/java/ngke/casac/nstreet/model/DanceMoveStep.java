@@ -14,7 +14,7 @@ public class DanceMoveStep {
     private MoveStepInstruction LeaderFootwork;
     private MoveStepInstruction FollowerFootwork;
 
-    public static class DanceMoveStepContract implements BaseColumns {
+    public static class Contract implements BaseColumns {
         public static final String TABLE_NAME = "dance_move_step_tbl";
         public static final String COL_ORDER = "order";
         public static final String COL_MOVE_ID = "move_id";
@@ -40,8 +40,24 @@ public class DanceMoveStep {
                     COL_FLW_INSTRUCTIONS + " TEXT)";
         }
 
-        public static String getDeleteTableSQL() {
+        public static String getDestroySQL() {
             return "DROP TABLE IF EXISTS " + TABLE_NAME;
+        }
+
+        public static String[] getProjection() {
+            String[] projection = {
+                    _ID,
+                    COL_ORDER,
+                    COL_MOVE_ID,
+                    COL_DESC,
+                    COL_LEAD_START_FOOT,
+                    COL_LEAD_END_FOOT,
+                    COL_LEAD_INSTRUCTIONS,
+                    COL_FLW_START_FOOT,
+                    COL_FLW_END_FOOT,
+                    COL_FLW_INSTRUCTIONS
+            };
+            return projection;
         }
     }
 
