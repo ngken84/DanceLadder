@@ -16,7 +16,7 @@ public class DanceMoveStep {
 
     public static class Contract implements BaseColumns {
         public static final String TABLE_NAME = "dance_move_step_tbl";
-        public static final String COL_ORDER = "order";
+        public static final String COL_ORDER = "move_order";
         public static final String COL_MOVE_ID = "move_id";
         public static final String COL_DESC = "description";
         public static final String COL_LEAD_START_FOOT = "lead_start_foot";

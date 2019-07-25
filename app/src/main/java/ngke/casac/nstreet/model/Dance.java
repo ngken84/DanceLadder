@@ -100,6 +100,10 @@ public class Dance extends DanceObject {
             this.id = id;
             name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
             description = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESCRIPTION));
+            long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_CATEGORY_ID));
+            if(categoryId > 0) {
+                category = new Category(db, categoryId);
+            }
             dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
             dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
             starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
@@ -157,7 +161,9 @@ public class Dance extends DanceObject {
 
         ContentValues cv = new ContentValues();
         cv.put(Contract.COL_NAME, name.trim());
-        cv.put(Contract.COL_CATEGORY_ID, category.getId());
+        if(category != null) {
+            cv.put(Contract.COL_CATEGORY_ID, category.getId());
+        }
         cv.put(Contract.COL_DESCRIPTION, description);
         cv.put(Contract.COL_DATE_CREATED, createTime);
         cv.put(Contract.COL_DATE_MODIFIED, createTime);
@@ -195,6 +201,14 @@ public class Dance extends DanceObject {
         }
         cursor.close();
         return retList;
+    }
+
+    public static void deleteAllDances(SQLiteDatabase db) throws DanceObjectException {
+        if(!isWriteDatabase(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+        }
+        db.delete(Contract.TABLE_NAME, null, null);
+
     }
 
     // GETTERS & SETTERS

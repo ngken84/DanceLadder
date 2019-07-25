@@ -11,12 +11,29 @@ import ngke.casac.nstreet.model.template.DanceObject;
 
 public class ActivityLog extends BaseObject {
 
+    public enum ActivityTag {
+        CREATED, MODIFIED, STARRED
+    }
+
     public ActivityLog(DanceObject object, String description) {
         date = new Date(System.currentTimeMillis());
         tableName = object.getTableName();
         refId = object.getId();
         activityDescription = description;
 
+        this.object = object;
+    }
+
+    public ActivityLog(DanceObject object, ActivityTag tag) {
+        date = new Date(System.currentTimeMillis());
+        tableName = object.getTableName();
+        refId = object.getId();
+        this.object = object;
+        switch(tag) {
+            case CREATED:
+                activityDescription = object.getType() + " " + object.getName() + " created.";
+                break;
+        }
     }
 
     private Date date;

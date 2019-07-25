@@ -1,6 +1,7 @@
 package ngke.casac.nstreet.model;
 
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -68,6 +69,59 @@ public class Category extends DanceObject {
         }
     }
 
+    public void insertCategory(SQLiteDatabase db) throws DanceObjectException {
+        if(!isWriteDatabase(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+        }
+        if(!isNameValid()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
+        if(doesCategoryExist(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
+        }
+
+        long time = System.currentTimeMillis();
+
+        dateModified = new Date(time);
+        dateCreated = new Date(time);
+
+        ContentValues cv = new ContentValues();
+        cv.put(Contract.COL_NAME, name);
+        cv.put(Contract.COL_STARRED, starred ? 1 : 0);
+        cv.put(Contract.COL_DATE_MODIFIED, time);
+        cv.put(Contract.COL_DATE_CREATED, time);
+
+        id = db.insert(Contract.TABLE_NAME, null, cv);
+
+        ActivityLog log = new ActivityLog(this, ActivityLog.ActivityTag.CREATED);
+        log.insertActivity(db);
+    }
+
+    public boolean doesCategoryExist(SQLiteDatabase db) throws DanceObjectException {
+        if(!isReadableDatabase(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+        }
+
+        String[] projection = {Contract._ID};
+        String selection = "UPPER(" + Contract.COL_NAME + ") = ?";
+        String[] selectionArgs = {name};
+
+        Cursor cursor = db.query(Contract.TABLE_NAME,
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null);
+
+        if(cursor.moveToNext()) {
+            cursor.close();
+            return true;
+        }
+        cursor.close();
+        return false;
+    }
+
     public static Map<Long, Category> getCategoryMap(SQLiteDatabase db) throws DanceObjectException {
         if(!isReadableDatabase(db)) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
@@ -87,6 +141,13 @@ public class Category extends DanceObject {
         }
         cursor.close();
         return retMap;
+    }
+
+    public static void deleteAllCategories(SQLiteDatabase db) throws DanceObjectException {
+        if(!isWriteDatabase(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+        }
+        db.delete(Contract.TABLE_NAME, null, null);
     }
 
     public static class Contract extends ContractTemplate {
