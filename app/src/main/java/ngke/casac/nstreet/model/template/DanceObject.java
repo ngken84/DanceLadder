@@ -1,10 +1,15 @@
 package ngke.casac.nstreet.model.template;
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+
 import java.util.Date;
 
-public abstract class DanceObject {
+import ngke.casac.nstreet.model.DanceObjectException;
 
-    protected int id;
+public abstract class DanceObject extends BaseObject {
+
+    protected long id;
     protected String name;
     protected boolean starred;
     protected Date dateCreated;
@@ -14,6 +19,39 @@ public abstract class DanceObject {
         dateCreated = new Date();
         dateModified = new Date();
     }
+
+    public boolean isNameValid() {
+        if(name == null || name.trim().length() == 0) {
+            return false;
+        }
+        return true;
+    }
+
+    // DATABASE FUNCTIONS
+    public void updateStarred(SQLiteDatabase db) throws DanceObjectException {
+        if(!isWriteDatabase(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+        }
+
+        if(id < 1) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
+
+        long time = System.currentTimeMillis();
+
+        ContentValues cv = new ContentValues();
+        cv.put(ContractTemplate.COL_STARRED, starred ? 1 : 0);
+        cv.put(ContractTemplate.COL_DATE_MODIFIED, time);
+
+        dateModified = new Date(time);
+
+        String selection = ContractTemplate._ID + " = ?";
+        String[] selectionArgs = {Long.toString(id)};
+
+        db.update(getTableName(), cv, selection, selectionArgs);
+    }
+
+
 
     public DanceObject(String name) {
         this.name = name;
@@ -27,11 +65,11 @@ public abstract class DanceObject {
         this.name = name;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -56,4 +94,6 @@ public abstract class DanceObject {
     }
 
     public abstract String getType();
+
+    public abstract String getTableName();
 }

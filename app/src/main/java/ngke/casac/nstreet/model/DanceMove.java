@@ -23,6 +23,11 @@ public class DanceMove extends DanceSubItem {
         return TYPE;
     }
 
+    @Override
+    public String getTableName() {
+        return Contract.TABLE_NAME;
+    }
+
     public static class Contract extends SubItemContractTemplate {
 
         public static final String TABLE_NAME = "dance_move_template";

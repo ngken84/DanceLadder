@@ -45,6 +45,11 @@ public class Question extends DanceSubItem {
         return TYPE;
     }
 
+    @Override
+    public String getTableName() {
+        return Contract.TABLE_NAME;
+    }
+
     public String getQuestion() {
         return getName();
     }

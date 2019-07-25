@@ -2,8 +2,11 @@ package ngke.casac.nstreet.model;
 
 
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import ngke.casac.nstreet.model.template.ContractTemplate;
 import ngke.casac.nstreet.model.template.DanceObject;
@@ -27,6 +30,63 @@ public class Category extends DanceObject {
     @Override
     public String getType() {
         return TYPE;
+    }
+
+    @Override
+    public String getTableName() {
+        return Contract.TABLE_NAME;
+    }
+
+    // DATABASE FUNCTIONS
+
+    public Category(SQLiteDatabase db, long id) throws DanceObjectException {
+        if(!isReadableDatabase(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+        }
+        String[] projection = Contract.getProjection();
+        String selection = Contract._ID + " = ?";
+        String selectionArgs[] = {Long.toString(id)};
+
+        Cursor cursor = db.query(Contract.TABLE_NAME,
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null);
+
+        if(cursor.moveToNext()) {
+            this.id = id;
+            name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
+            dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
+            dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
+            starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
+            cursor.close();
+        } else {
+            cursor.close();
+            throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+        }
+    }
+
+    public static Map<Long, Category> getCategoryMap(SQLiteDatabase db) throws DanceObjectException {
+        if(!isReadableDatabase(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+        }
+        String[] projection = Contract.getProjection();
+        Cursor cursor = db.query(Contract.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                null);
+        Map<Long, Category> retMap = new HashMap<>();
+        while(cursor.moveToNext()) {
+            Category category = new Category(cursor);
+            retMap.put(category.getId(), category);
+        }
+        cursor.close();
+        return retMap;
     }
 
     public static class Contract extends ContractTemplate {

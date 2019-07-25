@@ -6,9 +6,9 @@ import ngke.casac.nstreet.model.Dance;
 
 public abstract class DanceSubItem extends DanceObject {
 
-    private int orderNumber;
-    private int rating;
-    private Dance dance;
+    protected int orderNumber;
+    protected int rating;
+    protected Dance dance;
 
     public int getOrderNumber() {
         return orderNumber;
