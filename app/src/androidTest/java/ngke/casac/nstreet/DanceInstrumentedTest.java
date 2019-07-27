@@ -18,6 +18,7 @@ import ngke.casac.nstreet.model.DanceObjectException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
 public class DanceInstrumentedTest {
@@ -78,5 +79,46 @@ public class DanceInstrumentedTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void doubleInsertThrowsException() {
+        Context appContext = InstrumentationRegistry.getTargetContext();
+        DanceSQLHelper danceSQLHelper = new DanceSQLHelper(appContext);
+        SQLiteDatabase writeDB = danceSQLHelper.getWritableDatabase();
+
+        try {
+            Dance.deleteAllDances(writeDB);
+            Category.deleteAllCategories(writeDB);
+            ActivityLog.deleteAllActivity(writeDB);
+
+
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+        Dance dance = new Dance("West Coast Swing");
+        try {
+            dance.insertDance(writeDB);
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            dance.insertDance(writeDB);
+            assertTrue(false);
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+        Dance dance2 = new Dance("West Coast Swing");
+        try {
+            dance2.insertDance(writeDB);
+            assertTrue(false);
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
 }
