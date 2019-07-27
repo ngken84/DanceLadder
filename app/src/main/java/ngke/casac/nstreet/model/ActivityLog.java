@@ -1,10 +1,13 @@
 package ngke.casac.nstreet.model;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.provider.BaseColumns;
 
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import ngke.casac.nstreet.model.template.BaseObject;
 import ngke.casac.nstreet.model.template.DanceObject;
@@ -36,6 +39,25 @@ public class ActivityLog extends BaseObject {
         }
     }
 
+    public ActivityLog (SQLiteDatabase db, Cursor cursor) throws DanceObjectException {
+        checkReadableDatabase(db);
+        date = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE)));
+        activityDescription = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESCRIPTION));
+        refId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_REF_ID));
+        tableName = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_TABLE_NAME));
+
+        switch(tableName) {
+            case Dance.Contract.TABLE_NAME:
+                object = new Dance(db, refId);
+                break;
+            case Category.Contract.TABLE_NAME:
+                object = new Category(db, refId);
+                break;
+        }
+
+
+    }
+
     private Date date;
     private String tableName;
     private long refId;
@@ -61,16 +83,47 @@ public class ActivityLog extends BaseObject {
         db.insert(Contract.TABLE_NAME, null, cv);
     }
 
+    public static List<ActivityLog> getRecentActivity(SQLiteDatabase db) throws DanceObjectException {
+        if(!isReadableDatabase(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+        }
 
+        List<ActivityLog> retList = new LinkedList<>();
+        String[] projection = Contract.getProjection();
+
+        String orderBy = Contract.COL_DATE + " DESC";
+        Cursor cursor = db.query(Contract.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                orderBy,
+                "20");
+
+        while(cursor.moveToNext()) {
+            retList.add(new ActivityLog(db, cursor));
+        }
+        cursor.close();
+        return retList;
+    }
+
+    public static void deleteAllActivity(SQLiteDatabase db) throws DanceObjectException {
+        if(!isWriteDatabase(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+        }
+
+        db.delete(Contract.TABLE_NAME, null, null);
+    }
 
     public static class Contract implements BaseColumns {
         public static final String TABLE_NAME = "activity_log_tbl";
-        public static final String COL_DATE = "date";
-        public static final String COL_TABLE_NAME = "table";
+        public static final String COL_DATE = "activity_date";
+        public static final String COL_TABLE_NAME = "table_name";
         public static final String COL_REF_ID = "ref_id";
         public static final String COL_DESCRIPTION = "description";
 
-        public String[] getProjection() {
+        public static String[] getProjection() {
             String[] projection = {
                     COL_DATE,
                     COL_TABLE_NAME,
@@ -80,7 +133,7 @@ public class ActivityLog extends BaseObject {
             return projection;
         }
 
-        public String getInitSQL() {
+        public static String getInitSQL() {
             return "CREATE TABLE " + TABLE_NAME + " (" +
                     _ID + " INTEGER PRIMARY KEY, " +
                     COL_DATE + " INTEGER, " +
@@ -89,7 +142,7 @@ public class ActivityLog extends BaseObject {
                     COL_DESCRIPTION + " TEXT) ";
         }
 
-        public String getDestroySQL() {
+        public static String getDestroySQL() {
                 return "DROP TABLE IF EXISTS " + TABLE_NAME;
             }
         }

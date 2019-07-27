@@ -41,9 +41,7 @@ public class Category extends DanceObject {
     // DATABASE FUNCTIONS
 
     public Category(SQLiteDatabase db, long id) throws DanceObjectException {
-        if(!isReadableDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
-        }
+        checkReadableDatabase(db);
         String[] projection = Contract.getProjection();
         String selection = Contract._ID + " = ?";
         String selectionArgs[] = {Long.toString(id)};
@@ -70,9 +68,7 @@ public class Category extends DanceObject {
     }
 
     public void insertCategory(SQLiteDatabase db) throws DanceObjectException {
-        if(!isWriteDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
-        }
+        checkWriteDatabase(db);
         if(!isNameValid()) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }

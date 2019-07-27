@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import ngke.casac.nstreet.model.ActivityLog;
 import ngke.casac.nstreet.model.Category;
 import ngke.casac.nstreet.model.Dance;
 import ngke.casac.nstreet.model.DanceMove;
@@ -33,6 +34,7 @@ public class DanceSQLHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(Lesson.Contract.getInitSQL());
         sqLiteDatabase.execSQL(Teacher.Contract.getInitSQL());
         sqLiteDatabase.execSQL(Location.Contract.getInitSQL());
+        sqLiteDatabase.execSQL(ActivityLog.Contract.getInitSQL());
     }
 
     @Override
@@ -68,6 +70,10 @@ public class DanceSQLHelper extends SQLiteOpenHelper {
         //Location
         sqLiteDatabase.execSQL(Location.Contract.getDestroySQL());
         sqLiteDatabase.execSQL(Location.Contract.getInitSQL());
+
+        //ActivityLog
+        sqLiteDatabase.execSQL(ActivityLog.Contract.getDestroySQL());
+        sqLiteDatabase.execSQL(ActivityLog.Contract.getInitSQL());
 
     }
 }
