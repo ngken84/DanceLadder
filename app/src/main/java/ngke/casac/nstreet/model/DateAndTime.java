@@ -14,7 +14,7 @@ public class DateAndTime {
     }
 
     public DateAndTime(int day, int month, int year) {
-        dateInt = (day * 1000000) + (month * 10000) + year;
+        dateInt = getDateIntFromDayMonthYear(day, month, year);
     }
 
     /**
@@ -26,7 +26,7 @@ public class DateAndTime {
      * @param minute
      */
     public DateAndTime(int day, int month, int year, int hour, int minute) {
-        dateInt = (day * 1000000) + (month * 10000) + year;
+        dateInt = getDateIntFromDayMonthYear(day, month, year);
         timeInt = hour * 100 + minute;
     }
 
@@ -41,8 +41,12 @@ public class DateAndTime {
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
 
-        dateInt = (day * 1000000) + (month * 10000) + year;
+        dateInt = getDateIntFromDayMonthYear(day, month, year);
         timeInt = hour * 100 + minute;
+    }
+
+    private int getDateIntFromDayMonthYear(int day, int month, int year) {
+        return day + (month * 100) + (year * 10000);
     }
 
     public Date getDate() {
@@ -51,9 +55,9 @@ public class DateAndTime {
         int hour = timeInt/ 100;
         int minute = timeInt % 100;
 
-        int year = dateInt % 10000;
-        int month = (dateInt / 10000) % 100;
-        int day = dateInt / 1000000;
+        int year = dateInt / 10000;
+        int month = (dateInt / 100) % 100;
+        int day = dateInt % 100;
 
         calendar.set(year, month, day, hour, minute);
         return calendar.getTime();

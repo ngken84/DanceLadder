@@ -14,7 +14,11 @@ public class DateAndTimeUnitTest {
     @Test
     public void constructor_works() {
         DateAndTime dateAndTime = new DateAndTime(new Date(System.currentTimeMillis()));
-        assertEquals(dateAndTime.getDateInt(), 27062019);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+
+        int date = Integer.parseInt(sdf.format(new Date(System.currentTimeMillis()))) - 100;
+
+        assertEquals(dateAndTime.getDateInt(), date);
     }
 
     @Test
@@ -25,6 +29,5 @@ public class DateAndTimeUnitTest {
         DateAndTime dateAndTime2 = new DateAndTime(date);
         assertEquals(dateAndTime2.getDateInt(), dateAndTime.getDateInt());
         assertEquals(dateAndTime2.getTimeInt(), dateAndTime.getTimeInt());
-
     }
 }
