@@ -18,6 +18,7 @@ import ngke.casac.nstreet.model.DanceObjectException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
@@ -43,8 +44,7 @@ public class DanceInstrumentedTest {
 
             dance.insertDance(writeDB);
             Dance dance2 = new Dance(writeDB, dance.getId());
-            assertEquals(dance.getName(), dance2.getName());
-            assertEquals(dance.getCategory().getName(), dance2.getCategory().getName());
+            compareDances(dance, dance2);
         } catch (DanceObjectException e) {
             assertEquals("", e.getMessage());
         }
@@ -72,8 +72,7 @@ public class DanceInstrumentedTest {
             assertEquals(log.size(), 2);
 
             ActivityLog danceLog = log.get(0);
-            assertEquals(dance.getName(), danceLog.getObject().getName());
-            assertEquals(dance.getId(), danceLog.getObject().getId());
+            compareDances(dance, (Dance) danceLog.getObject());
 
         } catch (DanceObjectException e) {
             e.printStackTrace();
@@ -120,5 +119,27 @@ public class DanceInstrumentedTest {
 
     }
 
+    public static void compareDances(Dance d1, Dance d2) {
+        if(d1 == null) {
+            assertEquals("Dance 1 is null", "");
+            return;
+        }
+        if(d2 == null) {
+            assertEquals("Dance 2 is null", "");
+            return;
+        }
+        assertEquals(d1.getId(), d2.getId());
+        assertEquals(d1.getName(), d2.getName());
+        assertEquals(d1.getStarred(), d2.getStarred());
+        assertEquals(d1.getDateCreated(), d2.getDateCreated());
+        assertEquals(d1.getDateModified(), d2.getDateModified());
+        assertEquals(d1.getDescription(), d2.getDescription());
+        if(d1.getCategory() != null) {
+            assertEquals(d1.getCategory().getId(), d2.getCategory().getId());
+        } else {
+            assertNull(d2.getCategory());
+        }
 
+
+    }
 }

@@ -93,6 +93,13 @@ public abstract class DanceObject extends BaseObject {
         this.dateModified = dateModified;
     }
 
+    protected Date getDateFromLong(long time) {
+        if(time == 0) {
+            return null;
+        }
+        return new Date(time);
+    }
+
     public abstract String getType();
 
     public abstract String getTableName();

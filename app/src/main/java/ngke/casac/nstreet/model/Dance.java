@@ -30,8 +30,8 @@ public class Dance extends DanceObject {
         super(cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME)));
         id = cursor.getInt(cursor.getColumnIndexOrThrow(Contract._ID));
         description = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESCRIPTION));
-        dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
-        dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
+        dateModified = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
+        dateCreated = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
         starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
         category = categoryMap.get(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_CATEGORY_ID)));
     }
@@ -104,8 +104,8 @@ public class Dance extends DanceObject {
             if(categoryId > 0) {
                 category = new Category(db, categoryId);
             }
-            dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-            dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
+            dateCreated = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
+            dateModified = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
             starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
             cursor.close();
         } else {
@@ -158,6 +158,8 @@ public class Dance extends DanceObject {
         }
 
         long createTime = System.currentTimeMillis();
+        dateCreated = new Date(createTime);
+        dateModified = new Date(createTime);
 
         ContentValues cv = new ContentValues();
         cv.put(Contract.COL_NAME, name.trim());
@@ -167,7 +169,7 @@ public class Dance extends DanceObject {
         cv.put(Contract.COL_DESCRIPTION, description);
         cv.put(Contract.COL_DATE_CREATED, createTime);
         cv.put(Contract.COL_DATE_MODIFIED, createTime);
-        cv.put(Contract.COL_STARRED, false);
+        cv.put(Contract.COL_STARRED, starred);
         id = db.insert(Contract.TABLE_NAME, null, cv);
 
         if(id > 0) {
