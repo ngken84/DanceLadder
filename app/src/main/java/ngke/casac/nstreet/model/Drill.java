@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.Date;
+import java.util.Map;
 
 import ngke.casac.nstreet.model.template.DanceSubItem;
 import ngke.casac.nstreet.model.template.SubItemContractTemplate;
@@ -19,7 +20,7 @@ public class Drill extends DanceSubItem {
         completionCount = 0;
     }
 
-    public Drill(Cursor cursor) {
+    public Drill(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, Cursor cursor) throws DanceObjectException {
         id = cursor.getLong(cursor.getColumnIndexOrThrow(Contract._ID));
         name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
         starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
@@ -30,6 +31,21 @@ public class Drill extends DanceSubItem {
         dancersRequired = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DANCER_COUNT));
         estimatedTime = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ESTIMATED_TIME));
         lastCompleted = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_LAST_COMPLETED)));
+        rating = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_RATING));
+        orderNumber = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ORDER_NO));
+
+        long danceId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DANCE_ID));
+        if(danceId > 0) {
+            if(danceMap != null && danceMap.containsKey(danceId)) {
+                dance = danceMap.get(danceId);
+            } else {
+                Dance nDance = new Dance(db, categoryMap, danceId);
+                if(danceMap != null) {
+                    danceMap.put(danceId, nDance);
+                }
+                dance = nDance;
+            }
+        }
     }
 
     public static final String TYPE = "DRILL";
@@ -42,7 +58,7 @@ public class Drill extends DanceSubItem {
 
     // DATABASE
 
-    public Drill(SQLiteDatabase db, long id) throws DanceObjectException {
+    public Drill(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, long id) throws DanceObjectException {
         checkReadableDatabase(db);
 
         String[] projection = Contract.getProjection();
@@ -70,6 +86,20 @@ public class Drill extends DanceSubItem {
             dancersRequired = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DANCER_COUNT));
             estimatedTime = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ESTIMATED_TIME));
             lastCompleted = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_LAST_COMPLETED)));
+
+            long danceId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DANCE_ID));
+            if(danceId > 0) {
+                if(danceMap != null && danceMap.containsKey(danceId)) {
+                    dance = danceMap.get(danceId);
+                } else {
+                    Dance newDance = new Dance(db, categoryMap, danceId);
+                    if(danceMap != null) {
+                        danceMap.put(danceId, newDance);
+                    }
+                    dance = newDance;
+                }
+            }
+
         } else {
             throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
         }

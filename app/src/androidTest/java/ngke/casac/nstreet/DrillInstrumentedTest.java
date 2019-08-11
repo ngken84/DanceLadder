@@ -46,7 +46,7 @@ public class DrillInstrumentedTest {
         }
 
         try {
-            Drill drill2 = new Drill(writeDB, drill.getId());
+            Drill drill2 = new Drill(writeDB, null, null, drill.getId());
             compareDrills(drill, drill2);
 
 

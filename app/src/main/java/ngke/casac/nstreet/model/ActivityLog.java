@@ -6,8 +6,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.provider.BaseColumns;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import ngke.casac.nstreet.model.template.BaseObject;
 import ngke.casac.nstreet.model.template.DanceObject;
@@ -39,7 +41,7 @@ public class ActivityLog extends BaseObject {
         }
     }
 
-    public ActivityLog (SQLiteDatabase db, Cursor cursor) throws DanceObjectException {
+    public ActivityLog (SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, Cursor cursor) throws DanceObjectException {
         checkReadableDatabase(db);
         date = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE)));
         activityDescription = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESCRIPTION));
@@ -48,7 +50,7 @@ public class ActivityLog extends BaseObject {
 
         switch(tableName) {
             case Dance.Contract.TABLE_NAME:
-                object = new Dance(db, refId);
+                object = new Dance(db, categoryMap, refId);
                 break;
             case Category.Contract.TABLE_NAME:
                 object = new Category(db, refId);
@@ -101,8 +103,11 @@ public class ActivityLog extends BaseObject {
                 orderBy,
                 "20");
 
+        Map<Long, Dance> danceMap = new HashMap<>();
+        Map<Long, Category> categoryMap = new HashMap<>();
+
         while(cursor.moveToNext()) {
-            retList.add(new ActivityLog(db, cursor));
+            retList.add(new ActivityLog(db, danceMap, categoryMap, cursor));
         }
         cursor.close();
         return retList;

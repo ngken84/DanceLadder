@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,14 +27,29 @@ public class Dance extends DanceObject {
         super(danceName);
     }
 
-    public Dance(Cursor cursor, Map<Long, Category> categoryMap) {
+    public Dance(SQLiteDatabase db, Cursor cursor, Map<Long, Category> categoryMap) throws DanceObjectException {
         super(cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME)));
         id = cursor.getInt(cursor.getColumnIndexOrThrow(Contract._ID));
         description = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESCRIPTION));
         dateModified = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
         dateCreated = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
         starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
-        category = categoryMap.get(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_CATEGORY_ID)));
+
+        long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_CATEGORY_ID));
+
+        if(categoryMap != null && categoryMap.containsKey(categoryId)) {
+            category = categoryMap.get(categoryId);
+        } else {
+            try {
+                Category nCategory = new Category(db, categoryId);
+                if(categoryMap != null) {
+                    categoryMap.put(categoryId, nCategory);
+                }
+                category = nCategory;
+            } catch (DanceObjectException ex) {
+                category = null;
+            }
+        }
     }
 
     @Override
@@ -79,7 +95,7 @@ public class Dance extends DanceObject {
 
     // DATABASE FUNCTIONS
 
-    public Dance(SQLiteDatabase db, long id) throws DanceObjectException {
+    public Dance(SQLiteDatabase db, Map<Long, Category> categoryMap, long id) throws DanceObjectException {
         if(!isReadableDatabase(db)) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
         }
@@ -101,8 +117,14 @@ public class Dance extends DanceObject {
             name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
             description = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESCRIPTION));
             long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_CATEGORY_ID));
-            if(categoryId > 0) {
-                category = new Category(db, categoryId);
+            if(categoryMap != null && categoryMap.containsKey(categoryId)) {
+                category = categoryMap.get(categoryId);
+            } else {
+                Category nCategory = new Category(db, categoryId);
+                if(categoryMap != null) {
+                    categoryMap.put(categoryId, nCategory);
+                }
+                category = nCategory;
             }
             dateCreated = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
             dateModified = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
@@ -196,9 +218,8 @@ public class Dance extends DanceObject {
                 orderBy);
 
         List<Dance> retList = new ArrayList<>();
-
         while(cursor.moveToNext()) {
-            Dance dance = new Dance(cursor, catMap);
+            Dance dance = new Dance(db, cursor, catMap);
             retList.add(dance);
         }
         cursor.close();

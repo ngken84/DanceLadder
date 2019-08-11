@@ -43,7 +43,7 @@ public class DanceInstrumentedTest {
             dance.setCategory(category);
 
             dance.insertDance(writeDB);
-            Dance dance2 = new Dance(writeDB, dance.getId());
+            Dance dance2 = new Dance(writeDB,null, dance.getId());
             compareDances(dance, dance2);
         } catch (DanceObjectException e) {
             assertEquals("", e.getMessage());
