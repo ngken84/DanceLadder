@@ -111,28 +111,29 @@ public class Dance extends DanceObject {
                 null,
                 null,
                 null);
-
-        if(cursor.moveToNext()) {
-            this.id = id;
-            name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
-            description = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESCRIPTION));
-            long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_CATEGORY_ID));
-            if(categoryMap != null && categoryMap.containsKey(categoryId)) {
-                category = categoryMap.get(categoryId);
-            } else {
-                Category nCategory = new Category(db, categoryId);
-                if(categoryMap != null) {
-                    categoryMap.put(categoryId, nCategory);
+        try {
+            if (cursor.moveToNext()) {
+                this.id = id;
+                name = getNameFromCursor(cursor);
+                description = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESCRIPTION));
+                long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_CATEGORY_ID));
+                if (categoryMap != null && categoryMap.containsKey(categoryId)) {
+                    category = categoryMap.get(categoryId);
+                } else {
+                    Category nCategory = new Category(db, categoryId);
+                    if (categoryMap != null) {
+                        categoryMap.put(categoryId, nCategory);
+                    }
+                    category = nCategory;
                 }
-                category = nCategory;
+                dateCreated = getCreatedDateFromCursor(cursor);
+                dateModified = getModifiedDateFromCursor(cursor);
+                starred = getStarredFromCursor(cursor);
+            } else {
+                throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
             }
-            dateCreated = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-            dateModified = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
-            starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
+        } finally {
             cursor.close();
-        } else {
-            cursor.close();
-            throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
         }
     }
 

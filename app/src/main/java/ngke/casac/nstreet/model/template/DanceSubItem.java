@@ -1,10 +1,38 @@
 package ngke.casac.nstreet.model.template;
 
-import java.util.Comparator;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
+import java.util.Comparator;
+import java.util.Map;
+
+import ngke.casac.nstreet.model.Category;
 import ngke.casac.nstreet.model.Dance;
+import ngke.casac.nstreet.model.DanceObjectException;
 
 public abstract class DanceSubItem extends DanceObject {
+
+    public DanceSubItem() {}
+
+    public DanceSubItem(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, Cursor cursor) throws DanceObjectException {
+        super(cursor);
+        checkReadableDatabase(db);
+        long danceId = cursor.getLong(cursor.getColumnIndexOrThrow(SubItemContractTemplate.COL_DANCE_ID));
+
+        if(danceId != 0) {
+            if(danceMap != null && danceMap.containsKey(danceId)) {
+                dance = danceMap.get(danceId);
+            } else {
+                Dance d = new Dance(db, categoryMap, danceId);
+                if(danceMap != null) {
+                    danceMap.put(danceId, d);
+                }
+                dance = d;
+            }
+        }
+        rating = cursor.getInt(cursor.getColumnIndexOrThrow(SubItemContractTemplate.COL_RATING));
+        orderNumber = cursor.getInt(cursor.getColumnIndexOrThrow(SubItemContractTemplate.COL_ORDER_NO));
+    }
 
     protected int orderNumber;
     protected int rating;
@@ -44,6 +72,28 @@ public abstract class DanceSubItem extends DanceObject {
         @Override
         public boolean equals(Object o) {
             return false;
+        }
+    }
+
+    protected int getRatingFromCursor(Cursor cursor) {
+        return cursor.getInt(cursor.getColumnIndexOrThrow(SubItemContractTemplate.COL_RATING));
+    }
+
+    protected int getOrderNumberFromCursor(Cursor cursor) {
+        return cursor.getInt(cursor.getColumnIndexOrThrow(SubItemContractTemplate.COL_ORDER_NO));
+    }
+
+    protected Dance getDanceFromCursor(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, Cursor cursor) throws DanceObjectException {
+        long danceId = cursor.getLong(cursor.getColumnIndexOrThrow(SubItemContractTemplate.COL_DANCE_ID));
+        if(danceMap != null && danceMap.containsKey(danceId)) {
+            return danceMap.get(danceId);
+        } else {
+            checkReadableDatabase(db);
+            Dance d = new Dance(db, categoryMap, danceId);
+            if(danceMap != null) {
+                danceMap.put(danceId, d);
+            }
+            return d;
         }
     }
 }

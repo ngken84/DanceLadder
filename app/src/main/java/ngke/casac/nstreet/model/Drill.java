@@ -21,31 +21,12 @@ public class Drill extends DanceSubItem {
     }
 
     public Drill(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, Cursor cursor) throws DanceObjectException {
-        id = cursor.getLong(cursor.getColumnIndexOrThrow(Contract._ID));
-        name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
-        starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
-        dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-        dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
+        super(db, danceMap, categoryMap, cursor);
         instructions = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_INSTRUCTIONS));
         completionCount = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETION_CNT));
         dancersRequired = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DANCER_COUNT));
         estimatedTime = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ESTIMATED_TIME));
         lastCompleted = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_LAST_COMPLETED)));
-        rating = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_RATING));
-        orderNumber = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ORDER_NO));
-
-        long danceId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DANCE_ID));
-        if(danceId > 0) {
-            if(danceMap != null && danceMap.containsKey(danceId)) {
-                dance = danceMap.get(danceId);
-            } else {
-                Dance nDance = new Dance(db, categoryMap, danceId);
-                if(danceMap != null) {
-                    danceMap.put(danceId, nDance);
-                }
-                dance = nDance;
-            }
-        }
     }
 
     public static final String TYPE = "DRILL";
@@ -74,34 +55,27 @@ public class Drill extends DanceSubItem {
                 null,
                 null
         );
+        try {
+            if (cursor.moveToNext()) {
+                this.id = id;
+                name = getNameFromCursor(cursor);
+                starred = getStarredFromCursor(cursor);
+                dateCreated = getCreatedDateFromCursor(cursor);
+                dateModified = getModifiedDateFromCursor(cursor);
+                dance = getDanceFromCursor(db, danceMap, categoryMap, cursor);
+                rating = getRatingFromCursor(cursor);
+                orderNumber = getOrderNumberFromCursor(cursor);
 
-        if(cursor.moveToNext()) {
-            this.id = id;
-            name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
-            starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
-            dateCreated = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-            dateModified = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
-            instructions = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_INSTRUCTIONS));
-            completionCount = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETION_CNT));
-            dancersRequired = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DANCER_COUNT));
-            estimatedTime = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ESTIMATED_TIME));
-            lastCompleted = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_LAST_COMPLETED)));
-
-            long danceId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DANCE_ID));
-            if(danceId > 0) {
-                if(danceMap != null && danceMap.containsKey(danceId)) {
-                    dance = danceMap.get(danceId);
-                } else {
-                    Dance newDance = new Dance(db, categoryMap, danceId);
-                    if(danceMap != null) {
-                        danceMap.put(danceId, newDance);
-                    }
-                    dance = newDance;
-                }
+                instructions = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_INSTRUCTIONS));
+                completionCount = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETION_CNT));
+                dancersRequired = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DANCER_COUNT));
+                estimatedTime = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ESTIMATED_TIME));
+                lastCompleted = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_LAST_COMPLETED)));
+            } else {
+                throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
             }
-
-        } else {
-            throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+        } finally {
+            cursor.close();
         }
 
     }

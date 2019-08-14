@@ -17,10 +17,8 @@ import ngke.casac.nstreet.model.template.SubItemContractTemplate;
 public class DanceTask extends DanceSubItem {
 
     public DanceTask(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, Cursor cursor) throws DanceObjectException {
-        checkReadableDatabase(db);
+        super(db, danceMap, categoryMap, cursor);
 
-        id = cursor.getLong(cursor.getColumnIndexOrThrow(Contract._ID));
-        name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
         int dateInt = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DATE));
         int timeInt = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_TIME));
         if(dateInt > 0) {
@@ -35,21 +33,6 @@ public class DanceTask extends DanceSubItem {
             completedDate = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETED_DATE)));
         }
         dateIsDueDate = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_IS_DUE_DATE)) == 1;
-
-        long danceId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DANCE_ID));
-        if(danceId > 0) {
-            if(danceMap.containsKey(danceId)) {
-                dance = danceMap.get(danceId);
-            } else {
-                dance = new Dance(db, categoryMap, danceId);
-                danceMap.put(dance.getId(), dance);
-            }
-        }
-        dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-        dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
-        starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
-        rating = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_RATING));
-        orderNumber = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ORDER_NO));
     }
 
     public static final String TYPE = "dance_task";
@@ -79,48 +62,42 @@ public class DanceTask extends DanceSubItem {
                 null,
                 null,
                 null);
+        try {
+            if (cursor.moveToNext()) {
+                this.id = id;
+                name = getNameFromCursor(cursor);
+                starred = getStarredFromCursor(cursor);
+                dateCreated = getCreatedDateFromCursor(cursor);
+                dateModified = getModifiedDateFromCursor(cursor);
 
-        if(cursor.moveToNext()) {
-            this.id = id;
-            name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
-            starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
-            dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-            dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
-            int dateInt = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DATE));
-            int timeInt = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_TIME));
+                dance = getDanceFromCursor(db, danceMap, categoryMap, cursor);
+                rating = getRatingFromCursor(cursor);
+                orderNumber = getOrderNumberFromCursor(cursor);
 
-            dateAndTime = new DateAndTime(dateInt, timeInt);
-            completed = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETED)) == 1;
-            if(completed) {
-                completedDate = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETED_DATE)));
-            }
-            refTableName = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_TABLE_NAME));
-            refId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_REF_ID));
-            dateIsDueDate = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_IS_DUE_DATE)) == 1;
+                int dateInt = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DATE));
+                int timeInt = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_TIME));
 
-            long danceId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DANCE_ID));
-            if(danceId > 0) {
-                if(danceMap != null && danceMap.containsKey(danceId)) {
-                    dance = danceMap.get(danceId);
-                } else {
-                    Dance nDance = new Dance(db, categoryMap, danceId);
-                    if(danceMap != null & nDance != null) {
-                        danceMap.put(danceId, nDance);
+                dateAndTime = new DateAndTime(dateInt, timeInt);
+                completed = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETED)) == 1;
+                if (completed) {
+                    completedDate = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETED_DATE)));
+                }
+                refTableName = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_TABLE_NAME));
+                refId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_REF_ID));
+                dateIsDueDate = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_IS_DUE_DATE)) == 1;
+
+                if (refId > 0 && refTableName != null && !refTableName.isEmpty()) {
+                    switch (refTableName) {
+                        case Drill.Contract.TABLE_NAME:
+                            object = new Drill(db, danceMap, categoryMap, refId);
+                            break;
                     }
-                    dance = nDance;
                 }
+            } else {
+                throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
             }
-
-            rating = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_RATING));
-            orderNumber = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ORDER_NO));
-
-            if(refId > 0 && refTableName != null && !refTableName.isEmpty()) {
-                switch(refTableName) {
-                    case Drill.Contract.TABLE_NAME:
-                        object = new Drill(db, danceMap, categoryMap, refId);
-                        break;
-                }
-            }
+        } finally {
+            cursor.close();
         }
 
     }

@@ -1,13 +1,59 @@
 package ngke.casac.nstreet.model;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+
+import java.util.Date;
+import java.util.Map;
 
 import ngke.casac.nstreet.model.template.ContractTemplate;
 import ngke.casac.nstreet.model.template.DanceSubItem;
 import ngke.casac.nstreet.model.template.SubItemContractTemplate;
 
 public class Note extends DanceSubItem {
+
+    public Note(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, Cursor cursor) throws DanceObjectException {
+        super(db, danceMap, categoryMap, cursor);
+
+        note = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NOTE));
+    }
+
+    public Note(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, long id) throws DanceObjectException {
+        checkReadableDatabase(db);
+
+        String[] projection = Contract.getProjection();
+        String selection = Contract._ID + " = ?";
+        String[] selectionArgs = {Long.toString(id)};
+
+        Cursor cursor = db.query(Contract.TABLE_NAME,
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null);
+
+        try {
+            if (cursor.moveToNext()) {
+                this.id = id;
+                name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
+                dateCreated = getCreatedDateFromCursor(cursor);
+                dateModified = getModifiedDateFromCursor(cursor);
+                starred = getStarredFromCursor(cursor);
+
+                dance = getDanceFromCursor(db, danceMap, categoryMap, cursor);
+                orderNumber = getOrderNumberFromCursor(cursor);
+                rating = getRatingFromCursor(cursor);
+
+                note = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NOTE));
+            } else {
+                throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+            }
+        } finally {
+            cursor.close();
+        }
+    }
 
     private String note;
 

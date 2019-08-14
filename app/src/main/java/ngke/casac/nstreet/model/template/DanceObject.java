@@ -1,6 +1,7 @@
 package ngke.casac.nstreet.model.template;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.Date;
@@ -8,6 +9,14 @@ import java.util.Date;
 import ngke.casac.nstreet.model.DanceObjectException;
 
 public abstract class DanceObject extends BaseObject {
+
+    protected DanceObject(Cursor cursor) {
+        id = getIdFromCursor(cursor);
+        name = getNameFromCursor(cursor);
+        starred = getStarredFromCursor(cursor);
+        dateModified = getModifiedDateFromCursor(cursor);
+        dateCreated = getCreatedDateFromCursor(cursor);
+    }
 
     protected long id;
     protected String name;
@@ -103,4 +112,37 @@ public abstract class DanceObject extends BaseObject {
     public abstract String getType();
 
     public abstract String getTableName();
+
+    protected Date getModifiedDateFromCursor(Cursor cursor) {
+        return getDateFromCursor(cursor, ContractTemplate.COL_DATE_MODIFIED);
+    }
+
+    protected Date getCreatedDateFromCursor(Cursor cursor) {
+        return getDateFromCursor(cursor, ContractTemplate.COL_DATE_CREATED);
+    }
+
+    protected Date getDateFromCursor(Cursor cursor, String columnName) {
+        long time = cursor.getLong(cursor.getColumnIndexOrThrow(columnName));
+        if(time != 0) {
+            return new Date(time);
+        }
+        return null;
+    }
+
+    protected String[] getIdSelectionArgs(long id) {
+        String[] retval = { Long.toString(id) };
+        return retval;
+    }
+
+    protected boolean getStarredFromCursor(Cursor cursor) {
+        return cursor.getInt(cursor.getColumnIndexOrThrow(ContractTemplate.COL_STARRED)) == 1;
+    }
+
+    protected String getNameFromCursor(Cursor cursor) {
+        return cursor.getString(cursor.getColumnIndexOrThrow(ContractTemplate.COL_NAME));
+    }
+
+    protected long getIdFromCursor(Cursor cursor) {
+        return cursor.getLong(cursor.getColumnIndexOrThrow(ContractTemplate._ID));
+    }
 }
