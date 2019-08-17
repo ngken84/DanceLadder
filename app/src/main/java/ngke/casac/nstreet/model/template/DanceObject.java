@@ -1,11 +1,13 @@
 package ngke.casac.nstreet.model.template;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.Date;
 
+import ngke.casac.nstreet.model.ActivityLog;
 import ngke.casac.nstreet.model.DanceObjectException;
 
 public abstract class DanceObject extends BaseObject {
@@ -30,17 +32,53 @@ public abstract class DanceObject extends BaseObject {
     }
 
     public boolean isNameValid() {
-        if(name == null || name.trim().length() == 0) {
+        return isStringValid(name);
+    }
+
+    protected boolean isStringValid(String string) {
+        if(string == null || string.trim().length() == 0) {
             return false;
         }
         return true;
     }
 
     // DATABASE FUNCTIONS
-    public void updateStarred(SQLiteDatabase db) throws DanceObjectException {
-        if(!isWriteDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+
+    public void dbInsert(SQLiteDatabase db) throws DanceObjectException {
+        checkWriteDatabase(db);
+
+        if(id > 0) {
+            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
         }
+
+        isInsertReady(db);
+
+        long time = System.currentTimeMillis();
+
+        dateCreated = new Date(time);
+        dateModified = new Date(time);
+
+        ContentValues cv = new ContentValues();
+        cv.put(ContractTemplate.COL_NAME, name);
+        cv.put(ContractTemplate.COL_DATE_CREATED, time);
+        cv.put(ContractTemplate.COL_DATE_MODIFIED, time);
+        cv.put(ContractTemplate.COL_STARRED, starred ? 1 : 0);
+        updateContentValuesForInsert(cv);
+
+        id = db.insert(getTableName(), null, cv);
+
+        if(id > 0) {
+            ActivityLog log = new ActivityLog(this, getInsertActivityLogMsg());
+            log.insertActivity(db);
+        }
+    }
+
+    protected abstract void isInsertReady(SQLiteDatabase db) throws DanceObjectException;
+
+    protected abstract void updateContentValuesForInsert(ContentValues cv);
+
+    public void updateStarred(SQLiteDatabase db) throws DanceObjectException {
+        checkWriteDatabase(db);
 
         if(id < 1) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
@@ -60,7 +98,9 @@ public abstract class DanceObject extends BaseObject {
         db.update(getTableName(), cv, selection, selectionArgs);
     }
 
-
+    public String getInsertActivityLogMsg() {
+        return getObjectName() + " " + name + " created.";
+    }
 
     public DanceObject(String name) {
         this.name = name;
@@ -113,6 +153,8 @@ public abstract class DanceObject extends BaseObject {
 
     public abstract String getTableName();
 
+    public abstract String getObjectName();
+
     protected Date getModifiedDateFromCursor(Cursor cursor) {
         return getDateFromCursor(cursor, ContractTemplate.COL_DATE_MODIFIED);
     }
@@ -127,11 +169,6 @@ public abstract class DanceObject extends BaseObject {
             return new Date(time);
         }
         return null;
-    }
-
-    protected String[] getIdSelectionArgs(long id) {
-        String[] retval = { Long.toString(id) };
-        return retval;
     }
 
     protected boolean getStarredFromCursor(Cursor cursor) {

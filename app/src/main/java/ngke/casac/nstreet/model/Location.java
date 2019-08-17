@@ -12,15 +12,11 @@ import ngke.casac.nstreet.model.template.DanceObject;
 public class Location extends DanceObject {
 
     public Location(Cursor cursor) {
-        id = cursor.getLong(cursor.getColumnIndexOrThrow(Contract._ID));
-        name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
+        super(cursor);
         address = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_ADDRESS));
         city = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_CITY));
         state = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_STATE));
         zip = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_ZIP));
-        dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-        dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
-        starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
     }
 
     public static final String TYPE = "LOCATION";
@@ -65,46 +61,65 @@ public class Location extends DanceObject {
 
     // Database Functions
 
-    public Location(SQLiteDatabase db, long id) throws DanceObjectException {
-        if(!isReadableDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+    public static Location getLocationById(SQLiteDatabase db, long id){
+        try {
+            checkReadableDatabase(db);
+
+            String[] projection = Contract.getProjection();
+            String selection = Contract._ID + " = ?";
+            String[] selectionArgs = {Long.toString(id)};
+
+            Cursor cursor = db.query(
+                    Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+
+            try {
+                if (cursor.moveToNext()) {
+                    return new Location(cursor);
+                }
+            } finally {
+                cursor.close();
+            }
+        } catch (DanceObjectException ex) {
+
         }
-
-        String[] projection = Contract.getProjection();
-        String selection = Contract._ID + " = ?";
-        String[] selectionArgs = {Long.toString(id)};
-
-        Cursor cursor = db.query(
-                Contract.TABLE_NAME,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null);
-        if(cursor.moveToNext()) {
-            this.id = id;
-            name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
-            address = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_ADDRESS));
-            city = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_CITY));
-            state = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_STATE));
-            zip = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_ZIP));
-            cursor.close();
-        } else {
-            cursor.close();
-            throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
-        }
-
+        return null;
     }
 
-    public boolean doesLocationExistInDB(SQLiteDatabase db, String locationName) throws DanceObjectException {
-        if(!isReadableDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+    @Override
+    protected void updateContentValuesForInsert(ContentValues cv) {
+        cv.put(Contract.COL_ADDRESS, address);
+        cv.put(Contract.COL_CITY, city);
+        cv.put(Contract.COL_ZIP, zip);
+        cv.put(Contract.COL_STATE, state);
+    }
+
+    @Override
+    protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+        if(!isNameValid()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
+        if(doesLocationExistInDB(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
+        }
+    }
+
+    @Override
+    public String getObjectName() {
+        return "Location";
+    }
+
+    public boolean doesLocationExistInDB(SQLiteDatabase db) throws DanceObjectException {
+        checkReadableDatabase(db);
 
         String[] projection = {Contract._ID};
         String selection = "UPPER(" + Contract.COL_NAME + ") = UPPER(?)";
-        String[] selectionArgs = {locationName};
+        String[] selectionArgs = {name};
 
         Cursor cursor = db.query(Contract.TABLE_NAME,
                 projection,
@@ -114,42 +129,16 @@ public class Location extends DanceObject {
                 null,
                 null,
                 null);
-
-        if(cursor.moveToNext()) {
+        try {
+            if (cursor.moveToNext()) {
+                return true;
+            }
+            return false;
+        } finally {
             cursor.close();
-            return true;
         }
-        cursor.close();
-        return false;
-
     }
 
-    public void insertLocation(SQLiteDatabase db) throws DanceObjectException {
-        if(!isWriteDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
-        }
-
-        if(!isNameValid()) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
-        }
-
-        if(doesLocationExistInDB(db, name)) {
-            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
-        }
-
-        long dateCreated = System.currentTimeMillis();
-        setDateCreated(new Date(dateCreated));
-        setDateModified(new Date(dateCreated));
-
-        ContentValues cv = new ContentValues();
-        cv.put(Contract.COL_NAME, name);
-        cv.put(Contract.COL_ADDRESS, address);
-        cv.put(Contract.COL_CITY, city);
-        cv.put(Contract.COL_STATE, state);
-        cv.put(Contract.COL_ZIP, zip);
-
-        id = db.insert(Contract.TABLE_NAME, null, cv);
-    }
 
     @Override
     public String getType() {

@@ -21,11 +21,7 @@ public class Category extends DanceObject {
     }
 
     public Category(Cursor cursor) {
-        super(cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME)));
-        id = cursor.getInt(cursor.getColumnIndexOrThrow(Contract._ID));
-        dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-        dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
-        starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
+        super(cursor);
     }
 
     @Override
@@ -40,57 +36,53 @@ public class Category extends DanceObject {
 
     // DATABASE FUNCTIONS
 
-    public Category(SQLiteDatabase db, long id) throws DanceObjectException {
-        checkReadableDatabase(db);
-        String[] projection = Contract.getProjection();
-        String selection = Contract._ID + " = ?";
-        String selectionArgs[] = {Long.toString(id)};
+    public static Category getCategoryById(SQLiteDatabase db, long id) {
+        try {
+            checkReadableDatabase(db);
 
-        Cursor cursor = db.query(Contract.TABLE_NAME,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null);
+            String[] projection = Contract.getProjection();
+            String selection = Contract._ID + " = ?";
+            String selectionArgs[] = {Long.toString(id)};
 
-        if(cursor.moveToNext()) {
-            this.id = id;
-            name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
-            dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-            dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
-            starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
-            cursor.close();
-        } else {
-            cursor.close();
-            throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+            Cursor cursor = db.query(Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+            try {
+                if (cursor.moveToNext()) {
+                    return new Category(cursor);
+                } else {
+                    throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+                }
+            } finally {
+                cursor.close();
+            }
+        } catch (DanceObjectException ex) {
+
+        }
+        return null;
+    }
+
+    @Override
+    protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+        if (!isNameValid()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
+        if (doesCategoryExist(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
         }
     }
 
-    public void insertCategory(SQLiteDatabase db) throws DanceObjectException {
-        checkWriteDatabase(db);
-        if(!isNameValid()) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
-        }
-        if(doesCategoryExist(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
-        }
+    @Override
+    protected void updateContentValuesForInsert(ContentValues cv) {
+    }
 
-        long time = System.currentTimeMillis();
-
-        dateModified = new Date(time);
-        dateCreated = new Date(time);
-
-        ContentValues cv = new ContentValues();
-        cv.put(Contract.COL_NAME, name);
-        cv.put(Contract.COL_STARRED, starred ? 1 : 0);
-        cv.put(Contract.COL_DATE_MODIFIED, time);
-        cv.put(Contract.COL_DATE_CREATED, time);
-
-        id = db.insert(Contract.TABLE_NAME, null, cv);
-
-        ActivityLog log = new ActivityLog(this, ActivityLog.ActivityTag.CREATED);
-        log.insertActivity(db);
+    @Override
+    public String getObjectName() {
+        return "Category";
     }
 
     public boolean doesCategoryExist(SQLiteDatabase db) throws DanceObjectException {

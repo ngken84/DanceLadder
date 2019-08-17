@@ -19,45 +19,55 @@ public class Note extends DanceSubItem {
         note = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NOTE));
     }
 
-    public Note(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, long id) throws DanceObjectException {
-        checkReadableDatabase(db);
+    @Override
+    protected void updateContentValuesForSubInsert(ContentValues cv) {
+        cv.put(Contract.COL_NOTE, note);
+    }
 
-        String[] projection = Contract.getProjection();
-        String selection = Contract._ID + " = ?";
-        String[] selectionArgs = {Long.toString(id)};
-
-        Cursor cursor = db.query(Contract.TABLE_NAME,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null);
-
+    public static Note getNoteById(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, long id) {
         try {
-            if (cursor.moveToNext()) {
-                this.id = id;
-                name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
-                dateCreated = getCreatedDateFromCursor(cursor);
-                dateModified = getModifiedDateFromCursor(cursor);
-                starred = getStarredFromCursor(cursor);
+            checkReadableDatabase(db);
 
-                dance = getDanceFromCursor(db, danceMap, categoryMap, cursor);
-                orderNumber = getOrderNumberFromCursor(cursor);
-                rating = getRatingFromCursor(cursor);
+            String[] projection = Contract.getProjection();
+            String selection = Contract._ID + " = ?";
+            String[] selectionArgs = {Long.toString(id)};
 
-                note = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NOTE));
-            } else {
-                throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+            Cursor cursor = db.query(Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+
+            try {
+                if (cursor.moveToNext()) {
+                    return new Note(db, danceMap, categoryMap, cursor);
+                }
+            } finally {
+                cursor.close();
             }
-        } finally {
-            cursor.close();
+        } catch (DanceObjectException ex) {
+
         }
+        return null;
     }
 
     private String note;
 
     public static final String TYPE = "NOTE";
+
+    @Override
+    protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+        if(note == null || note.trim().isEmpty()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
+    }
+
+    @Override
+    public String getObjectName() {
+        return "Note";
+    }
 
     @Override
     public String getType() {

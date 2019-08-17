@@ -38,12 +38,12 @@ public class DanceInstrumentedTest {
             assertNotNull(dance);
 
             Category category = new Category("Ballroom");
-            category.insertCategory(writeDB);
+            category.dbInsert(writeDB);
 
             dance.setCategory(category);
 
-            dance.insertDance(writeDB);
-            Dance dance2 = new Dance(writeDB,null, dance.getId());
+            dance.dbInsert(writeDB);
+            Dance dance2 = Dance.getDanceById(writeDB,null, dance.getId());
             compareDances(dance, dance2);
         } catch (DanceObjectException e) {
             assertEquals("", e.getMessage());
@@ -62,10 +62,10 @@ public class DanceInstrumentedTest {
             ActivityLog.deleteAllActivity(writeDB);
 
             Category category = new Category("Swing");
-            category.insertCategory(writeDB);
+            category.dbInsert(writeDB);
 
             Dance dance = new Dance("West Coast Swing");
-            dance.insertDance(writeDB);
+            dance.dbInsert(writeDB);
 
             List<ActivityLog> log = ActivityLog.getRecentActivity(writeDB);
 
@@ -97,13 +97,13 @@ public class DanceInstrumentedTest {
 
         Dance dance = new Dance("West Coast Swing");
         try {
-            dance.insertDance(writeDB);
+            dance.dbInsert(writeDB);
         } catch (DanceObjectException e) {
             e.printStackTrace();
         }
 
         try {
-            dance.insertDance(writeDB);
+            dance.dbInsert(writeDB);
             assertTrue(false);
         } catch (DanceObjectException e) {
             e.printStackTrace();
@@ -111,7 +111,7 @@ public class DanceInstrumentedTest {
 
         Dance dance2 = new Dance("West Coast Swing");
         try {
-            dance2.insertDance(writeDB);
+            dance2.dbInsert(writeDB);
             assertTrue(false);
         } catch (DanceObjectException e) {
             e.printStackTrace();

@@ -24,7 +24,7 @@ public class DanceTask extends DanceSubItem {
         if(dateInt > 0) {
             dateAndTime = new DateAndTime(dateInt, timeInt);
         }
-        refId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_REF_ID));
+        long refId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_REF_ID));
         if(refId > 0) {
             refTableName = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_TABLE_NAME));
         }
@@ -40,108 +40,42 @@ public class DanceTask extends DanceSubItem {
     private DateAndTime dateAndTime;
     private boolean completed;
     private Date completedDate;
-    private String refTableName;
-    private long refId;
     private boolean dateIsDueDate;
+    private String refTableName;
+
 
     private DanceObject object;
 
     // DATABASE FUNCTIONS
 
-    public DanceTask(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, long id) throws DanceObjectException {
-        checkReadableDatabase(db);
-
-        String[] projection = Contract.getProjection();
-        String selection = Contract._ID + " = ?";
-        String[] selectionArgs = {Long.toString(id)};
-
-        Cursor cursor = db.query(Contract.TABLE_NAME,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null);
+    public static DanceTask getDanceTaskById(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, long id) throws DanceObjectException {
         try {
-            if (cursor.moveToNext()) {
-                this.id = id;
-                name = getNameFromCursor(cursor);
-                starred = getStarredFromCursor(cursor);
-                dateCreated = getCreatedDateFromCursor(cursor);
-                dateModified = getModifiedDateFromCursor(cursor);
+            checkReadableDatabase(db);
 
-                dance = getDanceFromCursor(db, danceMap, categoryMap, cursor);
-                rating = getRatingFromCursor(cursor);
-                orderNumber = getOrderNumberFromCursor(cursor);
+            String[] projection = Contract.getProjection();
+            String selection = Contract._ID + " = ?";
+            String[] selectionArgs = {Long.toString(id)};
 
-                int dateInt = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DATE));
-                int timeInt = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_TIME));
-
-                dateAndTime = new DateAndTime(dateInt, timeInt);
-                completed = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETED)) == 1;
-                if (completed) {
-                    completedDate = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETED_DATE)));
+            Cursor cursor = db.query(Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+            try {
+                if (cursor.moveToNext()) {
+                    return new DanceTask(db, danceMap, categoryMap, cursor);
                 }
-                refTableName = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_TABLE_NAME));
-                refId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_REF_ID));
-                dateIsDueDate = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_IS_DUE_DATE)) == 1;
-
-                if (refId > 0 && refTableName != null && !refTableName.isEmpty()) {
-                    switch (refTableName) {
-                        case Drill.Contract.TABLE_NAME:
-                            object = new Drill(db, danceMap, categoryMap, refId);
-                            break;
-                    }
-                }
-            } else {
-                throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+            } finally {
+                cursor.close();
             }
-        } finally {
-            cursor.close();
+
+        } catch (DanceObjectException ex) {
+
         }
+        return null;
 
-    }
-
-    public void insertDanceTask(SQLiteDatabase db) throws DanceObjectException {
-        checkWriteDatabase(db);
-
-        if(id < 1) {
-            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
-        }
-
-        if(!isValid()) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
-        }
-
-        ContentValues cv = new ContentValues();
-
-        long created = System.currentTimeMillis();
-
-        dateCreated = new Date(created);
-        dateModified = new Date(created);
-
-        cv.put(Contract.COL_DATE, dateAndTime.getDateInt());
-        cv.put(Contract.COL_TIME, dateAndTime.getTimeInt());
-        cv.put(Contract.COL_COMPLETED, completed ? 1 : 0);
-        if(completed && completedDate != null) {
-            cv.put(Contract.COL_COMPLETED_DATE, completedDate.getTime());
-        }
-        if(refId > 0 && !refTableName.isEmpty()) {
-            cv.put(Contract.COL_REF_ID, refId);
-            cv.put(Contract.COL_TABLE_NAME, refTableName);
-        }
-        cv.put(Contract.COL_NAME, name);
-        cv.put(Contract.COL_DATE_CREATED, created);
-        cv.put(Contract.COL_DATE_MODIFIED, created);
-        if(dance != null) {
-            cv.put(Contract.COL_DANCE_ID, dance.getId());
-        }
-        cv.put(Contract.COL_RATING, rating);
-        cv.put(Contract.COL_STARRED, starred ? 1 : 0);
-        cv.put(Contract.COL_ORDER_NO, orderNumber);
-        cv.put(Contract.COL_IS_DUE_DATE, dateIsDueDate ? 1 : 0);
-
-        id = db.insert(Contract.TABLE_NAME, null, cv);
     }
 
     public List<DanceTask> getDanceTasksForDate(SQLiteDatabase db, int dateInt) throws DanceObjectException {
@@ -169,22 +103,33 @@ public class DanceTask extends DanceSubItem {
         return retList;
     }
 
-    private boolean isValid() {
-
-        if(isNameValid()) {
-            return true;
+    @Override
+    protected void updateContentValuesForSubInsert(ContentValues cv) {
+        cv.put(Contract.COL_DATE, dateAndTime.getDateInt());
+        cv.put(Contract.COL_TIME, dateAndTime.getTimeInt());
+        cv.put(Contract.COL_IS_DUE_DATE, dateIsDueDate ? 1 : 0);
+        if(object != null) {
+            cv.put(Contract.COL_REF_ID, object.getId());
+            cv.put(Contract.COL_TABLE_NAME, object.getTableName());
         }
-
-        if(refId < 1) {
-            return false;
+        cv.put(Contract.COL_COMPLETED, completed ? 1 : 0);
+        if(completed && completedDate != null) {
+            cv.put(Contract.COL_COMPLETED_DATE, completedDate.getTime());
         }
-
-        if(refTableName == null || refTableName.isEmpty()) {
-            return false;
-        }
-        return true;
     }
 
+    @Override
+    protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+        if(dateAndTime == null) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
+        if(!dateAndTime.hasDate()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
+        if(!(isNameValid() || object != null)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
+    }
 
     public static class Contract extends SubItemContractTemplate {
 
@@ -231,6 +176,8 @@ public class DanceTask extends DanceSubItem {
 
     }
 
+
+
     @Override
     public String getType() {
         return TYPE;
@@ -239,6 +186,11 @@ public class DanceTask extends DanceSubItem {
     @Override
     public String getTableName() {
         return Contract.TABLE_NAME;
+    }
+
+    @Override
+    public String getObjectName() {
+        return "Task";
     }
 
     public DateAndTime getDateAndTime() {
@@ -263,14 +215,6 @@ public class DanceTask extends DanceSubItem {
 
     public void setCompletedDate(Date completedDate) {
         this.completedDate = completedDate;
-    }
-
-    public long getRefId() {
-        return refId;
-    }
-
-    public void setRefId(long refId) {
-        this.refId = refId;
     }
 
     public DanceObject getObject() {

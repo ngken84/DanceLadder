@@ -29,11 +29,11 @@ public class CategoryInstrumentedTest {
             Category.deleteAllCategories(writeDB);
 
             Category category = new Category("Ballroom Dances");
-            category.insertCategory(writeDB);
+            category.dbInsert(writeDB);
 
             assertNotEquals(category.getId(), 0);
 
-            Category dbCat = new Category(writeDB, category.getId());
+            Category dbCat = Category.getCategoryById(writeDB, category.getId());
 
             assertEquals(dbCat.getId(), category.getId());
             assertEquals(dbCat.getName(), category.getName());

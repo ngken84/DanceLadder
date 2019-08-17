@@ -39,22 +39,13 @@ public class DrillInstrumentedTest {
         Drill drill = new Drill(name, instructions);
 
         try {
-            drill.insertDrill(writeDB);
+            drill.dbInsert(writeDB);
         } catch (DanceObjectException e) {
             e.printStackTrace();
             assertTrue(false);
         }
-
-        try {
-            Drill drill2 = new Drill(writeDB, null, null, drill.getId());
-            compareDrills(drill, drill2);
-
-
-        } catch (DanceObjectException e) {
-            e.printStackTrace();
-            assertTrue(false);
-        }
-
+        Drill drill2 = Drill.getDrillById(writeDB, null, null, drill.getId());
+        compareDrills(drill, drill2);
 
     }
 

@@ -7,100 +7,84 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import ngke.casac.nstreet.model.template.ContractTemplate;
 import ngke.casac.nstreet.model.template.DanceObject;
 
 public class Lesson extends DanceObject {
 
+    public Lesson(SQLiteDatabase db, Map<Long, Teacher> teacherMap, Map<Long, Location> locationMap, Cursor cursor) throws DanceObjectException {
+        super(cursor);
+
+        long teacherId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_TEACHER_ID));
+        long locationId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_LOCATION_ID));
+        if(teacherId != 0 || locationId != 0) {
+            checkReadableDatabase(db);
+
+            if(locationMap != null && locationMap.containsKey(locationId)) {
+                location = locationMap.get(locationId);
+            } else {
+                Location l = Location.getLocationById(db, locationId);
+                if(locationMap != null && l != null) {
+                    locationMap.put(locationId, l);
+                }
+                location = l;
+            }
+
+
+            if(teacherMap != null && teacherMap.containsKey(teacherId)) {
+                teacher = teacherMap.get(teacherId);
+            } else {
+                Teacher t = Teacher.getTeacherById(db, locationMap, teacherId);
+                if(teacherMap != null && t != null) {
+                    teacherMap.put(teacherId, t);
+                }
+                teacher = t;
+            }
+
+        }
+
+
+
+    }
+
     public static final String TYPE = "LESSON";
 
     private Location location;
     private Teacher teacher;
-    private Date startTime;
-    private Date endTime;
+    private DateAndTime startDateAndTime;
+    private int duration;
 
 
     // DATABASE FUNCTIONS
 
-    public Lesson(SQLiteDatabase db, long id) throws DanceObjectException {
-        if(id < 1) {
-            throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+    @Override
+    protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+        if(startDateAndTime == null || duration == 0) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
-
-        if(isReadableDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
-        }
-        String[] projection = Contract.getProjection();
-        String selection = Contract._ID + " = ?";
-        String[] selectionArgs = {Long.toString(id)};
-
-        Cursor cursor = db.query(
-                Contract.TABLE_NAME,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null);
-
-        if(cursor.moveToNext()) {
-            this.id = id;
-            name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
-            starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
-            long teacherId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_TEACHER_ID));
-            if(teacherId > 0) {
-                teacher = new Teacher(db, teacherId);
-            }
-            long locationId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_LOCATION_ID));
-            if(locationId > 0) {
-                location = new Location(db, locationId);
-            }
-            dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-            dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
-            long startTimeLong = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_START_TIME));
-            if(startTimeLong > 0) {
-                startTime = new Date(startTimeLong);
-            }
-            long endTimeLong = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_END_TIME));
-            if(endTimeLong > 0) {
-                endTime = new Date(endTimeLong);
-            }
-        } else {
-            throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+        if(startDateAndTime.getDateInt() == 0 || startDateAndTime.getTimeInt() == 0) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
     }
 
-    public void insertLesson(SQLiteDatabase db) throws DanceObjectException {
-        if(isWriteDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+    @Override
+    protected void updateContentValuesForInsert(ContentValues cv) {
+        if(startDateAndTime != null) {
+            cv.put(Contract.COL_START_DATE, startDateAndTime.getDateInt());
+            cv.put(Contract.COL_START_TIME, startDateAndTime.getTimeInt());
         }
-
-        if(id > 0) {
-            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
-        }
-
-        if(startTime == null || endTime == null) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
-        }
-
-        ContentValues cv = new ContentValues();
-        cv.put(Contract.COL_NAME, name);
-        if(teacher != null) {
-            cv.put(Contract.COL_TEACHER_ID, teacher.getId());
-        }
+        cv.put(Contract.COL_DURATION, duration);
         if(location != null) {
             cv.put(Contract.COL_LOCATION_ID, location.getId());
         }
-        long time = System.currentTimeMillis();
-        cv.put(Contract.COL_DATE_CREATED, time);
-        cv.put(Contract.COL_DATE_MODIFIED, time);
-        cv.put(Contract.COL_START_TIME, startTime.getTime());
-        cv.put(Contract.COL_END_TIME, endTime.getTime());
-
-        id = db.insert(Contract.TABLE_NAME, null, cv);
+        if(teacher != null) {
+            cv.put(Contract.COL_TEACHER_ID, teacher.getId());
+        }
 
     }
+
 
     public static class Contract extends ContractTemplate {
 
@@ -108,12 +92,13 @@ public class Lesson extends DanceObject {
         public static final String COL_LOCATION_ID = "LOC_ID";
         public static final String COL_TEACHER_ID = "TEACHER_ID";
         public static final String COL_START_TIME = "START_TIME";
-        public static final String COL_END_TIME = "END_TIME";
+        public static final String COL_START_DATE = "START_DATE";
+        public static final String COL_DURATION = "DURATION";
 
         public static String getInitSQL() {
             return getCreateTableSQL(TABLE_NAME, COL_LOCATION_ID + " INTEGER, " +
                     COL_TEACHER_ID + " INTEGER, " + COL_START_TIME + " INTEGER, " +
-                    COL_END_TIME + " INTEGER, " );
+                    COL_START_DATE + " INTEGER, " + COL_DURATION + " INTEGER, ");
         }
 
         public static String getDestroySQL() {
@@ -127,7 +112,8 @@ public class Lesson extends DanceObject {
                     COL_TEACHER_ID,
                     COL_NAME,
                     COL_START_TIME,
-                    COL_END_TIME,
+                    COL_START_DATE,
+                    COL_DURATION,
                     COL_DATE_CREATED,
                     COL_STARRED,
                     COL_DATE_MODIFIED
@@ -141,6 +127,11 @@ public class Lesson extends DanceObject {
     @Override
     public String getType() {
         return TYPE;
+    }
+
+    @Override
+    public String getObjectName() {
+        return "Lesson";
     }
 
     @Override
@@ -164,19 +155,15 @@ public class Lesson extends DanceObject {
         this.teacher = teacher;
     }
 
-    public Date getStartTime() {
-        return startTime;
+    public DateAndTime getStartDateAndTime() {
+        return startDateAndTime;
     }
 
-    public void setStartTime(Date startTime) {
-        this.startTime = startTime;
+    public int getDuration() {
+        return duration;
     }
 
-    public Date getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(Date endTime) {
-        this.endTime = endTime;
+    public void setDuration(int duration) {
+        this.duration = duration;
     }
 }

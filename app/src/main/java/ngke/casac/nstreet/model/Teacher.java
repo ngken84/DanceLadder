@@ -5,18 +5,39 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.Date;
+import java.util.Map;
 
 import ngke.casac.nstreet.model.template.ContractTemplate;
 import ngke.casac.nstreet.model.template.DanceObject;
 
 public class Teacher extends DanceObject {
 
+    public Teacher(SQLiteDatabase db, Map<Long, Location> locationMap, Cursor cursor) {
+        super(cursor);
+        firstName = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_FIRST_NAME));
+        email = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_EMAIL));
+        phoneNumber = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_PHONE));
+        long locationId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_LOCATION_ID));
+
+        if(locationId > 0) {
+            if (locationMap != null && locationMap.containsKey(locationId)) {
+                location = locationMap.get(locationId);
+            } else {
+                Location l = Location.getLocationById(db, locationId);
+                if (locationMap != null && l != null) {
+                    locationMap.put(locationId, l);
+                }
+                location = l;
+            }
+        }
+    }
+
     public final static String TYPE = "TEACHER";
 
     private String firstName;
     private Location location;
     private String email;
-    private int phoneNumber;
+    private String phoneNumber;
 
     public boolean isTeacherValid() {
         if(!isNameValid()) {
@@ -31,42 +52,33 @@ public class Teacher extends DanceObject {
 
     // DATABASE FUNCTIONS
 
-    public Teacher(SQLiteDatabase db, long id) throws DanceObjectException {
-        if(!isReadableDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
-        }
+    public static Teacher getTeacherById(SQLiteDatabase db, Map<Long, Location> locationMap, long id) {
+        try {
+            checkReadableDatabase(db);
 
-        String[] projection = Contract.getProjection();
-        String selection = Contract._ID + " = ? ";
-        String[] selectionArgs = {Long.toString(id)};
+            String[] projection = Contract.getProjection();
+            String selection = Contract._ID + " = ? ";
+            String[] selectionArgs = {Long.toString(id)};
 
-        Cursor cursor = db.query(Contract.TABLE_NAME,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null);
+            Cursor cursor = db.query(Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
 
-        if(cursor.moveToNext()) {
-            this.id = id;
-            name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME));
-            firstName = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_FIRST_NAME));
-            long locationId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_LOCATION_ID));
-            if(locationId > 0) {
-                location = new Location(db, locationId);
+            try {
+                if (cursor.moveToNext()) {
+                    return new Teacher(db, locationMap, cursor);
+                }
+            } finally {
+                cursor.close();
             }
-            email = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_EMAIL));
-            phoneNumber = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_PHONE));
-            dateCreated = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_CREATED)));
-            dateModified = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_DATE_MODIFIED)));
-            starred = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_STARRED)) == 1;
-            cursor.close();
-        } else {
-            cursor.close();
-            throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
-        }
+        } catch (DanceObjectException ex) {
 
+        }
+        return null;
     }
 
     public boolean doesTeacherExist(SQLiteDatabase db) throws DanceObjectException {
@@ -95,25 +107,24 @@ public class Teacher extends DanceObject {
         }
     }
 
-    public void insertTeacher(SQLiteDatabase db) throws DanceObjectException {
-        if(!isWriteDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
+    @Override
+    protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+        if(!isTeacherValid()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
         if(doesTeacherExist(db)) {
             throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
         }
-        if(!isTeacherValid()) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
-        }
-        ContentValues cv = new ContentValues();
-        cv.put(Contract.COL_NAME, name);
+    }
+
+    @Override
+    protected void updateContentValuesForInsert(ContentValues cv) {
         cv.put(Contract.COL_FIRST_NAME, firstName);
         cv.put(Contract.COL_EMAIL, email);
+        cv.put(Contract.COL_PHONE, phoneNumber);
         if(location != null) {
             cv.put(Contract.COL_LOCATION_ID, location.getId());
         }
-        cv.put(Contract.COL_PHONE, phoneNumber);
-        id = db.insert(Contract.TABLE_NAME, null, cv);
     }
 
     public static class Contract extends ContractTemplate {
@@ -141,7 +152,7 @@ public class Teacher extends DanceObject {
 
         public static String getInitSQL() {
             return getCreateTableSQL(TABLE_NAME, COL_LOCATION_ID + " INTEGER, " +
-                    COL_FIRST_NAME + " TEXT, " + COL_EMAIL + " TEXT, " + COL_PHONE + "INTEGER, ");
+                    COL_FIRST_NAME + " TEXT, " + COL_EMAIL + " TEXT, " + COL_PHONE + " TEXT, ");
         }
 
         public static String getDestroySQL() {
@@ -175,11 +186,11 @@ public class Teacher extends DanceObject {
         this.email = email;
     }
 
-    public int getPhoneNumber() {
+    public String getPhoneNumber() {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(int phonenumber) {
+    public void setPhoneNumber(String phonenumber) {
         this.phoneNumber = phonenumber;
     }
 
@@ -191,5 +202,10 @@ public class Teacher extends DanceObject {
     @Override
     public String getTableName() {
         return Contract.TABLE_NAME;
+    }
+
+    @Override
+    public String getObjectName() {
+        return "Location";
     }
 }

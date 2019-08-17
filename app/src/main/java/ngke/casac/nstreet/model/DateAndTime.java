@@ -15,6 +15,7 @@ public class DateAndTime {
 
     public DateAndTime(int day, int month, int year) {
         dateInt = getDateIntFromDayMonthYear(day, month, year);
+        timeInt = -1;
     }
 
     /**
@@ -47,6 +48,14 @@ public class DateAndTime {
 
     private int getDateIntFromDayMonthYear(int day, int month, int year) {
         return day + (month * 100) + (year * 10000);
+    }
+
+    public boolean hasDate() {
+        return dateInt > 0;
+    }
+
+    public boolean hasDateAndTime() {
+        return dateInt > 0 && timeInt > -1;
     }
 
     public Date getDate() {

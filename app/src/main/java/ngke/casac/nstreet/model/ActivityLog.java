@@ -50,10 +50,10 @@ public class ActivityLog extends BaseObject {
 
         switch(tableName) {
             case Dance.Contract.TABLE_NAME:
-                object = new Dance(db, categoryMap, refId);
+                object = Dance.getDanceById(db, categoryMap, refId);
                 break;
             case Category.Contract.TABLE_NAME:
-                object = new Category(db, refId);
+                object = Category.getCategoryById(db, refId);
                 break;
         }
 

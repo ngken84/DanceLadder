@@ -1,5 +1,8 @@
 package ngke.casac.nstreet.model;
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+
 import ngke.casac.nstreet.model.template.DanceSubItem;
 import ngke.casac.nstreet.model.template.SubItemContractTemplate;
 
@@ -9,6 +12,21 @@ public class Question extends DanceSubItem {
 
     private String Answer;
     private boolean answered;
+
+    @Override
+    protected void updateContentValuesForSubInsert(ContentValues cv) {
+
+    }
+
+    @Override
+    protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+
+    }
+
+    @Override
+    public String getObjectName() {
+        return null;
+    }
 
     public static class Contract extends SubItemContractTemplate {
 

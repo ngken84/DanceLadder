@@ -27,7 +27,7 @@ public class Dance extends DanceObject {
         super(danceName);
     }
 
-    public Dance(SQLiteDatabase db, Cursor cursor, Map<Long, Category> categoryMap) throws DanceObjectException {
+    public Dance(SQLiteDatabase db, Map<Long, Category> categoryMap, Cursor cursor) throws DanceObjectException {
         super(cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NAME)));
         id = cursor.getInt(cursor.getColumnIndexOrThrow(Contract._ID));
         description = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESCRIPTION));
@@ -40,15 +40,12 @@ public class Dance extends DanceObject {
         if(categoryMap != null && categoryMap.containsKey(categoryId)) {
             category = categoryMap.get(categoryId);
         } else {
-            try {
-                Category nCategory = new Category(db, categoryId);
-                if(categoryMap != null) {
-                    categoryMap.put(categoryId, nCategory);
-                }
-                category = nCategory;
-            } catch (DanceObjectException ex) {
-                category = null;
+            Category c = Category.getCategoryById(db, categoryId);
+            if (categoryMap != null && c != null) {
+                categoryMap.put(categoryId, c);
             }
+            category = c;
+
         }
     }
 
@@ -62,8 +59,12 @@ public class Dance extends DanceObject {
         return Contract.TABLE_NAME;
     }
 
+    @Override
+    public String getObjectName() {
+        return "Dance";
+    }
 
-    // DanceContract
+// DanceContract
 
     public static class Contract extends ContractTemplate {
         public static final String TABLE_NAME = "dance_table";
@@ -95,46 +96,53 @@ public class Dance extends DanceObject {
 
     // DATABASE FUNCTIONS
 
-    public Dance(SQLiteDatabase db, Map<Long, Category> categoryMap, long id) throws DanceObjectException {
-        if(!isReadableDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
-        }
-
-        String[] projection = Contract.getProjection();
-        String selection = Contract._ID + " = ?";
-        String selectionArgs[] = {Long.toString(id)};
-
-        Cursor cursor = db.query(Contract.TABLE_NAME,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null);
+    public static Dance getDanceById(SQLiteDatabase db, Map<Long, Category> categoryMap, long id) {
         try {
-            if (cursor.moveToNext()) {
-                this.id = id;
-                name = getNameFromCursor(cursor);
-                description = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESCRIPTION));
-                long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_CATEGORY_ID));
-                if (categoryMap != null && categoryMap.containsKey(categoryId)) {
-                    category = categoryMap.get(categoryId);
-                } else {
-                    Category nCategory = new Category(db, categoryId);
-                    if (categoryMap != null) {
-                        categoryMap.put(categoryId, nCategory);
-                    }
-                    category = nCategory;
-                }
-                dateCreated = getCreatedDateFromCursor(cursor);
-                dateModified = getModifiedDateFromCursor(cursor);
-                starred = getStarredFromCursor(cursor);
-            } else {
-                throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+            if (!isReadableDatabase(db)) {
+                throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
             }
-        } finally {
-            cursor.close();
+
+            String[] projection = Contract.getProjection();
+            String selection = Contract._ID + " = ?";
+            String selectionArgs[] = {Long.toString(id)};
+
+            Cursor cursor = db.query(Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+            try {
+                if (cursor.moveToNext()) {
+                    return new Dance(db, categoryMap, cursor);
+                }
+            } finally {
+                cursor.close();
+            }
+        } catch (DanceObjectException ex) {
+
         }
+        return null;
+    }
+
+    @Override
+    protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+        if(!isNameValid()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
+
+        if(isDanceInDatabase(db)) {
+            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
+        }
+    }
+
+    @Override
+    protected void updateContentValuesForInsert(ContentValues cv) {
+        if(category != null) {
+            cv.put(Contract.COL_CATEGORY_ID, category.getId());
+        }
+        cv.put(Contract.COL_DESCRIPTION, description);
     }
 
     public boolean isDanceInDatabase(SQLiteDatabase db) throws DanceObjectException {
@@ -167,40 +175,6 @@ public class Dance extends DanceObject {
         return false;
     }
 
-    public void insertDance(SQLiteDatabase db) throws DanceObjectException {
-        if(!isWriteDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
-        }
-
-        if(!isNameValid()) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
-        }
-
-        if(id > 0 || isDanceInDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
-        }
-
-        long createTime = System.currentTimeMillis();
-        dateCreated = new Date(createTime);
-        dateModified = new Date(createTime);
-
-        ContentValues cv = new ContentValues();
-        cv.put(Contract.COL_NAME, name.trim());
-        if(category != null) {
-            cv.put(Contract.COL_CATEGORY_ID, category.getId());
-        }
-        cv.put(Contract.COL_DESCRIPTION, description);
-        cv.put(Contract.COL_DATE_CREATED, createTime);
-        cv.put(Contract.COL_DATE_MODIFIED, createTime);
-        cv.put(Contract.COL_STARRED, starred);
-        id = db.insert(Contract.TABLE_NAME, null, cv);
-
-        if(id > 0) {
-            ActivityLog log = new ActivityLog(this, "Dance " + name + " was created.");
-            log.insertActivity(db);
-        }
-    }
-
     public static List<Dance> getAllDances(SQLiteDatabase db) throws DanceObjectException {
         if(!isReadableDatabase(db)) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
@@ -219,11 +193,15 @@ public class Dance extends DanceObject {
                 orderBy);
 
         List<Dance> retList = new ArrayList<>();
-        while(cursor.moveToNext()) {
-            Dance dance = new Dance(db, cursor, catMap);
-            retList.add(dance);
+        try {
+            while(cursor.moveToNext()) {
+                Dance dance = new Dance(db, catMap, cursor);
+                retList.add(dance);
+            }
+        } finally {
+            cursor.close();
         }
-        cursor.close();
+
         return retList;
     }
 

@@ -1,8 +1,12 @@
 package ngke.casac.nstreet.model;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.provider.BaseColumns;
 
 import java.util.List;
+import java.util.Map;
 
 import ngke.casac.nstreet.model.template.ContractTemplate;
 import ngke.casac.nstreet.model.template.DanceSubItem;
@@ -10,12 +14,18 @@ import ngke.casac.nstreet.model.template.SubItemContractTemplate;
 
 public class DanceMove extends DanceSubItem {
 
+    public DanceMove(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, Cursor cursor) throws DanceObjectException {
+        super(db, danceMap, categoryMap, cursor);
+        parentMoveId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_PARENT_MOVE_ID));
+        description = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESC));
+
+    }
+
     public static final String TYPE = "DANCE_MOVE";
 
     private String description;
-    private DanceMove parentMove;
+    private long parentMoveId;
 
-    private List<DanceSubItem> subItems;
     private List<DanceMoveStep> moveSteps;
 
     @Override
@@ -26,6 +36,26 @@ public class DanceMove extends DanceSubItem {
     @Override
     public String getTableName() {
         return Contract.TABLE_NAME;
+    }
+
+    @Override
+    public String getObjectName() {
+        return "Dance Move";
+    }
+
+    // DATABASE FUNCTIONS
+
+    @Override
+    protected void updateContentValuesForSubInsert(ContentValues cv) {
+        if(parentMoveId > 0) {
+            cv.put(Contract.COL_PARENT_MOVE_ID, parentMoveId);
+        }
+        cv.put(Contract.COL_DESC, description);
+    }
+
+    @Override
+    protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+
     }
 
     public static class Contract extends SubItemContractTemplate {
@@ -68,11 +98,11 @@ public class DanceMove extends DanceSubItem {
         this.description = description;
     }
 
-    public DanceMove getParentMove() {
-        return parentMove;
+    public long getParentMoveId() {
+        return parentMoveId;
     }
 
-    public void setParentMove(DanceMove parentMove) {
-        this.parentMove = parentMove;
+    public void setParentMoveId(long parentMoveId) {
+        this.parentMoveId = parentMoveId;
     }
 }

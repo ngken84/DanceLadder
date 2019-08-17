@@ -39,83 +39,58 @@ public class Drill extends DanceSubItem {
 
     // DATABASE
 
-    public Drill(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, long id) throws DanceObjectException {
-        checkReadableDatabase(db);
-
-        String[] projection = Contract.getProjection();
-        String selection = Contract._ID + " = ?";
-        String[] selectionArgs = {Long.toString(id)};
-
-        Cursor cursor = db.query(
-                Contract.TABLE_NAME,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null
-        );
+    public static Drill getDrillById(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, long id)  {
         try {
-            if (cursor.moveToNext()) {
-                this.id = id;
-                name = getNameFromCursor(cursor);
-                starred = getStarredFromCursor(cursor);
-                dateCreated = getCreatedDateFromCursor(cursor);
-                dateModified = getModifiedDateFromCursor(cursor);
-                dance = getDanceFromCursor(db, danceMap, categoryMap, cursor);
-                rating = getRatingFromCursor(cursor);
-                orderNumber = getOrderNumberFromCursor(cursor);
+            checkReadableDatabase(db);
 
-                instructions = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_INSTRUCTIONS));
-                completionCount = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_COMPLETION_CNT));
-                dancersRequired = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DANCER_COUNT));
-                estimatedTime = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ESTIMATED_TIME));
-                lastCompleted = getDateFromLong(cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_LAST_COMPLETED)));
-            } else {
-                throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+            String[] projection = Contract.getProjection();
+            String selection = Contract._ID + " = ?";
+            String[] selectionArgs = {Long.toString(id)};
+
+            Cursor cursor = db.query(
+                    Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null
+            );
+            try {
+                if (cursor.moveToNext()) {
+                    return new Drill(db, danceMap, categoryMap, cursor);
+                } else {
+                    throw new DanceObjectException(DanceObjectException.ERR_NOT_FOUND);
+                }
+            } finally {
+                cursor.close();
             }
-        } finally {
-            cursor.close();
-        }
+        } catch (DanceObjectException ex)  {
 
+        }
+        return null;
     }
 
-    public void insertDrill(SQLiteDatabase db) throws DanceObjectException {
-        checkWriteDatabase(db);
-
-        if(id != 0) {
-            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
+    @Override
+    protected void updateContentValuesForSubInsert(ContentValues cv) {
+        cv.put(Contract.COL_INSTRUCTIONS, instructions);
+        cv.put(Contract.COL_COMPLETION_CNT, completionCount);
+        cv.put(Contract.COL_DANCER_COUNT, dancersRequired);
+        if(lastCompleted != null) {
+            cv.put(Contract.COL_LAST_COMPLETED, lastCompleted.getTime());
         }
+        cv.put(Contract.COL_ESTIMATED_TIME, estimatedTime);
+    }
 
+    @Override
+    protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
         if(!isNameValid()) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
 
-        long created = System.currentTimeMillis();
-        dateCreated = new Date(created);
-        dateModified = new Date(created);
-
-        ContentValues cv = new ContentValues();
-        cv.put(Contract.COL_NAME, name);
-        cv.put(Contract.COL_INSTRUCTIONS, instructions);
-        cv.put(Contract.COL_COMPLETION_CNT, completionCount);
-        cv.put(Contract.COL_DATE_CREATED, created);
-        cv.put(Contract.COL_DATE_MODIFIED, created);
-        cv.put(Contract.COL_DANCER_COUNT, dancersRequired);
-        if(dance != null) {
-            cv.put(Contract.COL_DANCE_ID, dance.getId());
+        if(!isStringValid(instructions)) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
-        cv.put(Contract.COL_RATING, rating);
-        cv.put(Contract.COL_ESTIMATED_TIME, estimatedTime);
-        cv.put(Contract.COL_ORDER_NO, orderNumber);
-        if(lastCompleted != null) {
-            cv.put(Contract.COL_LAST_COMPLETED, lastCompleted.getTime());
-        }
-
-        id = db.insert(Contract.TABLE_NAME, null, cv);
-
-        ActivityLog log = new ActivityLog(this, ActivityLog.ActivityTag.CREATED);
-        log.insertActivity(db);
     }
 
     public static void  deleteAllDrills(SQLiteDatabase db) throws DanceObjectException {
@@ -172,6 +147,11 @@ public class Drill extends DanceSubItem {
     @Override
     public String getTableName() {
         return Contract.TABLE_NAME;
+    }
+
+    @Override
+    public String getObjectName() {
+        return "Drill";
     }
 
     public String getInstructions() {

@@ -1,5 +1,6 @@
 package ngke.casac.nstreet.model.template;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -23,7 +24,7 @@ public abstract class DanceSubItem extends DanceObject {
             if(danceMap != null && danceMap.containsKey(danceId)) {
                 dance = danceMap.get(danceId);
             } else {
-                Dance d = new Dance(db, categoryMap, danceId);
+                Dance d = Dance.getDanceById(db, categoryMap, danceId);
                 if(danceMap != null) {
                     danceMap.put(danceId, d);
                 }
@@ -75,6 +76,21 @@ public abstract class DanceSubItem extends DanceObject {
         }
     }
 
+    // Database Functions
+
+    @Override
+    protected void updateContentValuesForInsert(ContentValues cv) {
+        cv.put(SubItemContractTemplate.COL_ORDER_NO, orderNumber);
+        cv.put(SubItemContractTemplate.COL_RATING, rating);
+
+        if(dance != null) {
+            cv.put(SubItemContractTemplate.COL_DANCE_ID, dance.getId());
+        }
+        updateContentValuesForSubInsert(cv);
+    }
+
+    protected abstract void updateContentValuesForSubInsert(ContentValues cv);
+
     protected int getRatingFromCursor(Cursor cursor) {
         return cursor.getInt(cursor.getColumnIndexOrThrow(SubItemContractTemplate.COL_RATING));
     }
@@ -89,7 +105,7 @@ public abstract class DanceSubItem extends DanceObject {
             return danceMap.get(danceId);
         } else {
             checkReadableDatabase(db);
-            Dance d = new Dance(db, categoryMap, danceId);
+            Dance d = Dance.getDanceById(db, categoryMap, danceId);
             if(danceMap != null) {
                 danceMap.put(danceId, d);
             }
