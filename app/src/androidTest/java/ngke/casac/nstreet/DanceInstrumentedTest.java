@@ -122,6 +122,34 @@ public class DanceInstrumentedTest {
 
     }
 
+    @Test
+    public void getDanceByNameWorks() {
+        Context appContext = InstrumentationRegistry.getTargetContext();
+        DanceSQLHelper danceSQLHelper = new DanceSQLHelper(appContext);
+        SQLiteDatabase writeDB = danceSQLHelper.getWritableDatabase();
+
+        try {
+            Dance.deleteAllDances(writeDB);
+            Category.deleteAllCategories(writeDB);
+            ActivityLog.deleteAllActivity(writeDB);
+
+            Category category = new Category("Swing");
+            category.dbInsert(writeDB);
+
+            Dance dance = new Dance("West Coast Swing");
+            dance.setCategory(category);
+            dance.dbInsert(writeDB);
+
+            Dance dance2 = Dance.getDanceByName(writeDB, null, "WEST COAST SWING");
+            compareDances(dance, dance2);
+
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
     public static void compareDances(Dance d1, Dance d2) {
         compareDanceObjects(d1, d2);
         if(d1 == null) {

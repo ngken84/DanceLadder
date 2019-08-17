@@ -126,6 +126,40 @@ public class Dance extends DanceObject {
         return null;
     }
 
+    public static Dance getDanceByName(SQLiteDatabase db, Map<Long, Category> categoryMap, String danceName) {
+        if(danceName == null || danceName.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            checkReadableDatabase(db);
+
+            String[] projection = Contract.getProjection();
+            String selection = "UPPER(" + Contract.COL_NAME + ") = UPPER(?)";
+            String[] selectionArgs = {danceName.trim()};
+
+            Cursor cursor = db.query(Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+
+            try {
+                if(cursor.moveToNext()) {
+                    return new Dance(db, categoryMap, cursor);
+                }
+            } finally {
+                cursor.close();
+            }
+
+        } catch (DanceObjectException ex) {
+
+        }
+        return null;
+    }
+
     @Override
     public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
 
