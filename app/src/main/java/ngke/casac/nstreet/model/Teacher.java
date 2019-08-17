@@ -118,7 +118,12 @@ public class Teacher extends DanceObject {
     }
 
     @Override
-    protected void updateContentValuesForInsert(ContentValues cv) {
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+
+    }
+
+    @Override
+    protected void updateContentValues(ContentValues cv) {
         cv.put(Contract.COL_FIRST_NAME, firstName);
         cv.put(Contract.COL_EMAIL, email);
         cv.put(Contract.COL_PHONE, phoneNumber);
@@ -162,6 +167,25 @@ public class Teacher extends DanceObject {
 
     }
 
+    // BOILERPLATE
+
+    @Override
+    public String getType() {
+        return TYPE;
+    }
+
+    @Override
+    public String getTableName() {
+        return Contract.TABLE_NAME;
+    }
+
+    @Override
+    public String getObjectName() {
+        return "Location";
+    }
+
+    // GETTERS & SETTERS
+
     public String getFirstName() {
         return firstName;
     }
@@ -194,18 +218,5 @@ public class Teacher extends DanceObject {
         this.phoneNumber = phonenumber;
     }
 
-    @Override
-    public String getType() {
-        return TYPE;
-    }
 
-    @Override
-    public String getTableName() {
-        return Contract.TABLE_NAME;
-    }
-
-    @Override
-    public String getObjectName() {
-        return "Location";
-    }
 }

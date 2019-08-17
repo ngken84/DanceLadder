@@ -70,7 +70,12 @@ public class Lesson extends DanceObject {
     }
 
     @Override
-    protected void updateContentValuesForInsert(ContentValues cv) {
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+
+    }
+
+    @Override
+    protected void updateContentValues(ContentValues cv) {
         if(startDateAndTime != null) {
             cv.put(Contract.COL_START_DATE, startDateAndTime.getDateInt());
             cv.put(Contract.COL_START_TIME, startDateAndTime.getTimeInt());

@@ -46,7 +46,7 @@ public class DanceMove extends DanceSubItem {
     // DATABASE FUNCTIONS
 
     @Override
-    protected void updateContentValuesForSubInsert(ContentValues cv) {
+    protected void updateContentValuesForSubItem(ContentValues cv) {
         if(parentMoveId > 0) {
             cv.put(Contract.COL_PARENT_MOVE_ID, parentMoveId);
         }
@@ -55,7 +55,12 @@ public class DanceMove extends DanceSubItem {
 
     @Override
     protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+        throw new DanceObjectException("NOT IMPLEMENTED");
+    }
 
+    @Override
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+        throw new DanceObjectException("NOT IMPLEMENTED");
     }
 
     public static class Contract extends SubItemContractTemplate {

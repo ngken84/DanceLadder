@@ -15,6 +15,9 @@ import ngke.casac.nstreet.model.ActivityLog;
 import ngke.casac.nstreet.model.Category;
 import ngke.casac.nstreet.model.Dance;
 import ngke.casac.nstreet.model.DanceObjectException;
+import ngke.casac.nstreet.model.template.DanceObject;
+import ngke.casac.nstreet.model.template.DanceSubItem;
+import ngke.casac.nstreet.model.template.SubItemContractTemplate;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -120,24 +123,75 @@ public class DanceInstrumentedTest {
     }
 
     public static void compareDances(Dance d1, Dance d2) {
+        compareDanceObjects(d1, d2);
         if(d1 == null) {
-            assertEquals("Dance 1 is null", "");
             return;
         }
-        if(d2 == null) {
-            assertEquals("Dance 2 is null", "");
-            return;
-        }
-        assertEquals(d1.getId(), d2.getId());
-        assertEquals(d1.getName(), d2.getName());
-        assertEquals(d1.getStarred(), d2.getStarred());
-        assertEquals(d1.getDateCreated(), d2.getDateCreated());
-        assertEquals(d1.getDateModified(), d2.getDateModified());
         assertEquals(d1.getDescription(), d2.getDescription());
         if(d1.getCategory() != null) {
             assertEquals(d1.getCategory().getId(), d2.getCategory().getId());
         } else {
             assertNull(d2.getCategory());
+        }
+    }
+
+    public static void compareDanceObjects(DanceObject d1, DanceObject d2) {
+        if(d1 == null && d2 != null) {
+            assertNull(d2);
+            return;
+        }
+
+        if(d2 == null && d1 != null) {
+            assertNotNull(d2);
+            return;
+        }
+
+        if(d1 == null && d2 == null) {
+            return;
+        }
+
+        assertEquals(d1.getId(), d2.getId());
+        assertEquals(d1.getName(), d2.getName());
+        assertEquals(d1.getStarred(), d2.getStarred());
+        assertEquals(d1.getDateCreated(), d2.getDateCreated());
+        assertEquals(d1.getDateModified(), d2.getDateModified());
+    }
+
+    public static void compareSubDanceObjects(DanceSubItem d1, DanceSubItem d2) {
+        if(d1 == null && d2 != null) {
+            assertNull(d2);
+            return;
+        }
+
+        if(d2 == null && d1 != null) {
+            assertNotNull(d2);
+            return;
+        }
+
+        if(d1 == null && d2 == null) {
+            return;
+        }
+
+        compareDanceObjects(d1, d2);
+        assertEquals(d1.getOrderNumber(), d2.getOrderNumber());
+        assertEquals(d1.getRating(), d2.getRating());
+        Dance dance1 = d1.getDance();
+        Dance dance2 = d2.getDance();
+
+        int nullCount = 0;
+
+        if(dance1 != null) {
+            nullCount++;
+        }
+
+        if(dance2 != null) {
+            nullCount++;
+        }
+
+        if(nullCount%2 != 0) {
+            assertEquals("One dance is null!", "");
+        } else if(nullCount == 0) {
+            assertEquals(dance1.getId(), dance2.getId());
         }
 
 

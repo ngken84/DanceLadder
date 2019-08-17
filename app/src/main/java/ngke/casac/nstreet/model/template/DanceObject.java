@@ -1,6 +1,5 @@
 package ngke.casac.nstreet.model.template;
 
-import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -58,12 +57,8 @@ public abstract class DanceObject extends BaseObject {
         dateCreated = new Date(time);
         dateModified = new Date(time);
 
-        ContentValues cv = new ContentValues();
-        cv.put(ContractTemplate.COL_NAME, name);
-        cv.put(ContractTemplate.COL_DATE_CREATED, time);
-        cv.put(ContractTemplate.COL_DATE_MODIFIED, time);
-        cv.put(ContractTemplate.COL_STARRED, starred ? 1 : 0);
-        updateContentValuesForInsert(cv);
+        ContentValues cv = getContentValues();
+        updateContentValues(cv);
 
         id = db.insert(getTableName(), null, cv);
 
@@ -73,9 +68,49 @@ public abstract class DanceObject extends BaseObject {
         }
     }
 
+    public void dbUpdate(SQLiteDatabase db) throws DanceObjectException {
+        checkWriteDatabase(db);
+
+        // If has not been put into database, just insert it into the database
+        if(id == 0) {
+            dbInsert(db);
+            return;
+        }
+
+        isUpdateReady(db);
+
+        dateModified = new Date(System.currentTimeMillis());
+        ContentValues cv = getContentValues();
+        updateContentValues(cv);
+
+        String selection = ContractTemplate._ID + " = ?";
+        String[] selectionArgs = {Long.toString(id)};
+
+        db.update(getTableName(),
+                cv,
+                selection,
+                selectionArgs);
+
+        ActivityLog log = new ActivityLog(this, ActivityLog.ActivityTag.MODIFIED);
+        log.insertActivity(db);
+
+    }
+
+    public abstract void isUpdateReady(SQLiteDatabase db) throws DanceObjectException;
+
+    private ContentValues getContentValues() {
+        ContentValues cv = new ContentValues();
+        cv.put(ContractTemplate.COL_NAME, name);
+        cv.put(ContractTemplate.COL_DATE_CREATED, dateCreated.getTime());
+        cv.put(ContractTemplate.COL_DATE_MODIFIED, dateModified.getTime());
+        cv.put(ContractTemplate.COL_STARRED, starred ? 1 : 0);
+        return cv;
+    }
+
+
     protected abstract void isInsertReady(SQLiteDatabase db) throws DanceObjectException;
 
-    protected abstract void updateContentValuesForInsert(ContentValues cv);
+    protected abstract void updateContentValues(ContentValues cv);
 
     public void updateStarred(SQLiteDatabase db) throws DanceObjectException {
         checkWriteDatabase(db);

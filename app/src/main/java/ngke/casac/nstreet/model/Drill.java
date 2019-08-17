@@ -72,7 +72,7 @@ public class Drill extends DanceSubItem {
     }
 
     @Override
-    protected void updateContentValuesForSubInsert(ContentValues cv) {
+    protected void updateContentValuesForSubItem(ContentValues cv) {
         cv.put(Contract.COL_INSTRUCTIONS, instructions);
         cv.put(Contract.COL_COMPLETION_CNT, completionCount);
         cv.put(Contract.COL_DANCER_COUNT, dancersRequired);
@@ -91,6 +91,11 @@ public class Drill extends DanceSubItem {
         if(!isStringValid(instructions)) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
+    }
+
+    @Override
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+
     }
 
     public static void  deleteAllDrills(SQLiteDatabase db) throws DanceObjectException {

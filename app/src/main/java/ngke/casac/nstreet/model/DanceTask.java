@@ -104,7 +104,7 @@ public class DanceTask extends DanceSubItem {
     }
 
     @Override
-    protected void updateContentValuesForSubInsert(ContentValues cv) {
+    protected void updateContentValuesForSubItem(ContentValues cv) {
         cv.put(Contract.COL_DATE, dateAndTime.getDateInt());
         cv.put(Contract.COL_TIME, dateAndTime.getTimeInt());
         cv.put(Contract.COL_IS_DUE_DATE, dateIsDueDate ? 1 : 0);
@@ -129,6 +129,11 @@ public class DanceTask extends DanceSubItem {
         if(!(isNameValid() || object != null)) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
+    }
+
+    @Override
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+
     }
 
     public static class Contract extends SubItemContractTemplate {

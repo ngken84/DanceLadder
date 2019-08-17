@@ -19,10 +19,11 @@ public class Note extends DanceSubItem {
         note = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NOTE));
     }
 
-    @Override
-    protected void updateContentValuesForSubInsert(ContentValues cv) {
-        cv.put(Contract.COL_NOTE, note);
-    }
+    private String note;
+
+    public static final String TYPE = "NOTE";
+
+    // DATABASE FUNCTIONS
 
     public static Note getNoteById(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, long id) {
         try {
@@ -53,9 +54,10 @@ public class Note extends DanceSubItem {
         return null;
     }
 
-    private String note;
-
-    public static final String TYPE = "NOTE";
+    @Override
+    protected void updateContentValuesForSubItem(ContentValues cv) {
+        cv.put(Contract.COL_NOTE, note);
+    }
 
     @Override
     protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
@@ -65,21 +67,9 @@ public class Note extends DanceSubItem {
     }
 
     @Override
-    public String getObjectName() {
-        return "Note";
-    }
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
 
-    @Override
-    public String getType() {
-        return TYPE;
     }
-
-    @Override
-    public String getTableName() {
-        return Contract.TABLE_NAME;
-    }
-
-    // DATABASE FUNCTIONS
 
     public static class Contract extends SubItemContractTemplate {
 
@@ -110,33 +100,24 @@ public class Note extends DanceSubItem {
 
     }
 
-    public void insertNote(SQLiteDatabase db) throws DanceObjectException {
-        if(!isWriteDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
-        }
+    // Boilerplate
 
-        if(note == null || note.trim().length() == 0 || dance == null) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
-        }
-
-        if(id > 0) {
-            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
-        }
-
-        long time = System.currentTimeMillis();
-
-        ContentValues cv = new ContentValues();
-        cv.put(Contract.COL_NAME, name);
-        cv.put(Contract.COL_NOTE, note);
-        cv.put(Contract.COL_DANCE_ID, dance.getId());
-        cv.put(Contract.COL_DATE_CREATED, time);
-        cv.put(Contract.COL_DATE_MODIFIED, time);
-        cv.put(Contract.COL_STARRED, starred ? 1 : 0);
-        cv.put(Contract.COL_ORDER_NO, orderNumber);
-        cv.put(Contract.COL_RATING, rating);
-
-        id = db.insert(Contract.TABLE_NAME, null, cv);
+    @Override
+    public String getObjectName() {
+        return "Note";
     }
+
+    @Override
+    public String getType() {
+        return TYPE;
+    }
+
+    @Override
+    public String getTableName() {
+        return Contract.TABLE_NAME;
+    }
+
+    // Getters & Setters
 
     public String getNote() {
         return note;

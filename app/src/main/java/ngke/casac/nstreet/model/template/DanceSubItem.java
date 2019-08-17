@@ -79,17 +79,17 @@ public abstract class DanceSubItem extends DanceObject {
     // Database Functions
 
     @Override
-    protected void updateContentValuesForInsert(ContentValues cv) {
+    protected void updateContentValues(ContentValues cv) {
         cv.put(SubItemContractTemplate.COL_ORDER_NO, orderNumber);
         cv.put(SubItemContractTemplate.COL_RATING, rating);
 
         if(dance != null) {
             cv.put(SubItemContractTemplate.COL_DANCE_ID, dance.getId());
         }
-        updateContentValuesForSubInsert(cv);
+        updateContentValuesForSubItem(cv);
     }
 
-    protected abstract void updateContentValuesForSubInsert(ContentValues cv);
+    protected abstract void updateContentValuesForSubItem(ContentValues cv);
 
     protected int getRatingFromCursor(Cursor cursor) {
         return cursor.getInt(cursor.getColumnIndexOrThrow(SubItemContractTemplate.COL_RATING));

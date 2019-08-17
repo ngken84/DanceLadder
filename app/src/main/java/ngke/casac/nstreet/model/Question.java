@@ -14,7 +14,12 @@ public class Question extends DanceSubItem {
     private boolean answered;
 
     @Override
-    protected void updateContentValuesForSubInsert(ContentValues cv) {
+    protected void updateContentValuesForSubItem(ContentValues cv) {
+
+    }
+
+    @Override
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
 
     }
 

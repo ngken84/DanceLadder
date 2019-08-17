@@ -77,7 +77,12 @@ public class Category extends DanceObject {
     }
 
     @Override
-    protected void updateContentValuesForInsert(ContentValues cv) {
+    protected void updateContentValues(ContentValues cv) {
+    }
+
+    @Override
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+
     }
 
     @Override

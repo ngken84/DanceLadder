@@ -13,6 +13,7 @@ import ngke.casac.nstreet.database.DanceSQLHelper;
 import ngke.casac.nstreet.model.Category;
 import ngke.casac.nstreet.model.DanceObjectException;
 
+import static ngke.casac.nstreet.DanceInstrumentedTest.compareDanceObjects;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -42,4 +43,19 @@ public class CategoryInstrumentedTest {
         }
     }
 
+    public static void compareCategory(Category c1, Category c2) {
+        if(c1 == null && c2 == null) {
+            return;
+        }
+
+        if(c1 == null && c2 != null) {
+            assertEquals("C1 is null", "");
+            return;
+        }
+        if(c2 == null && c1 != null) {
+            assertEquals("C2 is null", "");
+            return;
+        }
+        compareDanceObjects(c1, c2);
+    }
 }

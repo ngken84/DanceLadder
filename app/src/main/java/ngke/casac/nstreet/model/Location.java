@@ -92,7 +92,7 @@ public class Location extends DanceObject {
     }
 
     @Override
-    protected void updateContentValuesForInsert(ContentValues cv) {
+    protected void updateContentValues(ContentValues cv) {
         cv.put(Contract.COL_ADDRESS, address);
         cv.put(Contract.COL_CITY, city);
         cv.put(Contract.COL_ZIP, zip);
@@ -107,6 +107,11 @@ public class Location extends DanceObject {
         if(doesLocationExistInDB(db)) {
             throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
         }
+    }
+
+    @Override
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+
     }
 
     @Override

@@ -127,6 +127,11 @@ public class Dance extends DanceObject {
     }
 
     @Override
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+
+    }
+
+    @Override
     protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
         if(!isNameValid()) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
@@ -138,7 +143,7 @@ public class Dance extends DanceObject {
     }
 
     @Override
-    protected void updateContentValuesForInsert(ContentValues cv) {
+    protected void updateContentValues(ContentValues cv) {
         if(category != null) {
             cv.put(Contract.COL_CATEGORY_ID, category.getId());
         }
