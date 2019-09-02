@@ -66,6 +66,37 @@ public class Category extends DanceObject {
         return null;
     }
 
+    public static Category getCategoryByName(SQLiteDatabase db, String name) {
+        if(name == null || name.trim().length() == 0) {
+            return null;
+        }
+
+        try {
+            checkReadableDatabase(db);
+
+            String[] projection = Contract.getProjection();
+
+            String selection = "UPPER(" + Contract.COL_NAME + ") = UPPER(?)";
+            String[] selectionArgs = {name};
+
+            Cursor cursor = db.query(Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+
+            if(cursor.moveToNext()) {
+                return new Category(cursor);
+            }
+        } catch (DanceObjectException e) {
+
+        }
+        return null;
+    }
+
+
     @Override
     protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
         if (!isNameValid()) {
@@ -82,6 +113,13 @@ public class Category extends DanceObject {
 
     @Override
     public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+        if(!isNameValid()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
+        Category category = getCategoryByName(db, name);
+        if(category != null && category.getId() != id) {
+            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
+        }
 
     }
 

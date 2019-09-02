@@ -38,6 +38,9 @@ public class ActivityLog extends BaseObject {
             case CREATED:
                 activityDescription = object.getType() + " " + object.getName() + " created.";
                 break;
+            case MODIFIED:
+                activityDescription = object.getType() + " " + object.getName() + " modified";
+                break;
         }
     }
 

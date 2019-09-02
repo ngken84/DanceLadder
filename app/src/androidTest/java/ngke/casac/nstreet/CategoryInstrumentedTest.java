@@ -17,6 +17,7 @@ import static junit.framework.TestCase.assertTrue;
 import static ngke.casac.nstreet.DanceInstrumentedTest.compareDanceObjects;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(AndroidJUnit4.class)
 public class CategoryInstrumentedTest {
@@ -64,7 +65,60 @@ public class CategoryInstrumentedTest {
         } catch (DanceObjectException e) {
             e.printStackTrace();
         }
+    }
 
+    @Test
+    public void modifyCategoryWorks() {
+        SQLiteDatabase db = getCleanDatabase();
+
+        Category category = new Category("Swing");
+        try {
+            category.dbInsert(db);
+        } catch (DanceObjectException e) {
+            assertEquals("modifyCategoryWorks : Unable to insert category", "");
+        }
+
+        category.setName("Street Swing");
+        try {
+            category.dbUpdate(db, true);
+        } catch (DanceObjectException e) {
+            assertEquals("modifyCategoryWorks : Unable to update category", e.getMessage());
+        }
+
+        Category category2 = Category.getCategoryById(db, category.getId());
+
+        assertNotNull(category2);
+        compareCategory(category, category2);
+
+
+
+    }
+
+    @Test
+    public void cantModifyCategoryToDuplicateCategory() {
+        SQLiteDatabase db = getCleanDatabase();
+
+        Category c1 = new Category("Swing");
+        try {
+            c1.dbInsert(db);
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+        Category c2 = new Category("Fake Swing");
+        try {
+            c2.dbInsert(db);
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+        c2.setName("Swing");
+        try {
+            c2.dbUpdate(db, true);
+            assertEquals("Should not be able to update category name to match existing category", "");
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
 
     }
 
