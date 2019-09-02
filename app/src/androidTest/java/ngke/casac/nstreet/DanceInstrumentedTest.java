@@ -144,8 +144,6 @@ public class DanceInstrumentedTest {
             compareDances(dance, dance2);
 
 
-
-
         } catch (DanceObjectException e) {
             e.printStackTrace();
         }

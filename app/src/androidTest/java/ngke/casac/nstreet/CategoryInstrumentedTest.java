@@ -13,6 +13,7 @@ import ngke.casac.nstreet.database.DanceSQLHelper;
 import ngke.casac.nstreet.model.Category;
 import ngke.casac.nstreet.model.DanceObjectException;
 
+import static junit.framework.TestCase.assertTrue;
 import static ngke.casac.nstreet.DanceInstrumentedTest.compareDanceObjects;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -22,13 +23,9 @@ public class CategoryInstrumentedTest {
 
     @Test
     public void constructorTest() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-        DanceSQLHelper danceSQLHelper = new DanceSQLHelper(appContext);
-        SQLiteDatabase writeDB = danceSQLHelper.getWritableDatabase();
+        SQLiteDatabase writeDB = getCleanDatabase();
 
         try {
-            Category.deleteAllCategories(writeDB);
-
             Category category = new Category("Ballroom Dances");
             category.dbInsert(writeDB);
 
@@ -36,11 +33,53 @@ public class CategoryInstrumentedTest {
 
             Category dbCat = Category.getCategoryById(writeDB, category.getId());
 
-            assertEquals(dbCat.getId(), category.getId());
-            assertEquals(dbCat.getName(), category.getName());
+            compareCategory(category, dbCat);
         } catch (DanceObjectException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void constructorDoubleInsertFails() {
+        SQLiteDatabase db = getCleanDatabase();
+
+        Category category = new Category("Ballroom");
+        try {
+            category.dbInsert(db);
+        } catch (DanceObjectException e) {
+            assertTrue(false);
+        }
+
+        try {
+            category.dbInsert(db);
+            assertTrue(false);
+        } catch (DanceObjectException e) {
+
+        }
+
+        Category category2 = new Category("Ballroom");
+        try {
+            category2.dbInsert(db);
+            assertTrue(false);
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private SQLiteDatabase getCleanDatabase() {
+        Context appContext = InstrumentationRegistry.getTargetContext();
+        DanceSQLHelper danceSQLHelper = new DanceSQLHelper(appContext);
+        SQLiteDatabase writeDB = danceSQLHelper.getWritableDatabase();
+
+        try {
+            Category.deleteAllCategories(writeDB);
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+        return writeDB;
+
     }
 
     public static void compareCategory(Category c1, Category c2) {

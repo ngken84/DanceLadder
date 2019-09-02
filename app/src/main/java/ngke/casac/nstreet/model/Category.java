@@ -97,7 +97,7 @@ public class Category extends DanceObject {
 
         String[] projection = {Contract._ID};
         String selection = "UPPER(" + Contract.COL_NAME + ") = ?";
-        String[] selectionArgs = {name};
+        String[] selectionArgs = {name.toUpperCase()};
 
         Cursor cursor = db.query(Contract.TABLE_NAME,
                 projection,
