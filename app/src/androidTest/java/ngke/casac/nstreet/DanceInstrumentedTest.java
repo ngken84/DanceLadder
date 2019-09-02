@@ -29,14 +29,9 @@ public class DanceInstrumentedTest {
 
     @Test
     public void constructorWorks() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-        DanceSQLHelper danceSQLHelper = new DanceSQLHelper(appContext);
-        SQLiteDatabase writeDB = danceSQLHelper.getWritableDatabase();
+        SQLiteDatabase writeDB = getClearedDatabase();
 
         try {
-            Dance.deleteAllDances(writeDB);
-            Category.deleteAllCategories(writeDB);
-
             Dance dance = new Dance("Tango");
             assertNotNull(dance);
 
@@ -55,15 +50,10 @@ public class DanceInstrumentedTest {
 
     @Test
     public void doesCreateActivityLogWork() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-        DanceSQLHelper danceSQLHelper = new DanceSQLHelper(appContext);
-        SQLiteDatabase writeDB = danceSQLHelper.getWritableDatabase();
+
+        SQLiteDatabase writeDB = getClearedDatabase();
 
         try {
-            Dance.deleteAllDances(writeDB);
-            Category.deleteAllCategories(writeDB);
-            ActivityLog.deleteAllActivity(writeDB);
-
             Category category = new Category("Swing");
             category.dbInsert(writeDB);
 
@@ -84,20 +74,7 @@ public class DanceInstrumentedTest {
 
     @Test
     public void doubleInsertThrowsException() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-        DanceSQLHelper danceSQLHelper = new DanceSQLHelper(appContext);
-        SQLiteDatabase writeDB = danceSQLHelper.getWritableDatabase();
-
-        try {
-            Dance.deleteAllDances(writeDB);
-            Category.deleteAllCategories(writeDB);
-            ActivityLog.deleteAllActivity(writeDB);
-
-
-        } catch (DanceObjectException e) {
-            e.printStackTrace();
-        }
-
+        SQLiteDatabase writeDB = getClearedDatabase();
         Dance dance = new Dance("West Coast Swing");
         try {
             dance.dbInsert(writeDB);
@@ -124,15 +101,9 @@ public class DanceInstrumentedTest {
 
     @Test
     public void getDanceByNameWorks() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-        DanceSQLHelper danceSQLHelper = new DanceSQLHelper(appContext);
-        SQLiteDatabase writeDB = danceSQLHelper.getWritableDatabase();
+        SQLiteDatabase writeDB = getClearedDatabase();
 
         try {
-            Dance.deleteAllDances(writeDB);
-            Category.deleteAllCategories(writeDB);
-            ActivityLog.deleteAllActivity(writeDB);
-
             Category category = new Category("Swing");
             category.dbInsert(writeDB);
 
@@ -149,6 +120,54 @@ public class DanceInstrumentedTest {
 
     }
 
+    @Test
+    public void modifyDanceWorks() {
+
+        SQLiteDatabase writeDb = getClearedDatabase();
+
+        try {
+            Category category = new Category("Ballroom");
+            category.dbInsert(writeDb);
+
+            Dance dance = new Dance("Waltz");
+            dance.setCategory(category);
+            dance.dbInsert(writeDb);
+
+            Dance dance2 = Dance.getDanceById(writeDb, null, dance.getId());
+
+            compareDances(dance, dance2);
+
+            dance.setName("Foxtrot");
+            dance.dbUpdate(writeDb, true);
+
+            dance2 = Dance.getDanceById(writeDb, null, dance.getId());
+            compareDances(dance, dance2);
+
+
+
+
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    public SQLiteDatabase getClearedDatabase() {
+        Context appContext = InstrumentationRegistry.getTargetContext();
+        DanceSQLHelper danceSQLHelper = new DanceSQLHelper(appContext);
+        SQLiteDatabase writeDB = danceSQLHelper.getWritableDatabase();
+
+        try {
+            Dance.deleteAllDances(writeDB);
+            Category.deleteAllCategories(writeDB);
+            ActivityLog.deleteAllActivity(writeDB);
+        } catch (DanceObjectException ex) {
+
+        }
+
+        return writeDB;
+    }
 
     public static void compareDances(Dance d1, Dance d2) {
         compareDanceObjects(d1, d2);

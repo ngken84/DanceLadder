@@ -68,7 +68,7 @@ public abstract class DanceObject extends BaseObject {
         }
     }
 
-    public void dbUpdate(SQLiteDatabase db) throws DanceObjectException {
+    public void dbUpdate(SQLiteDatabase db, boolean addLog, String logText) throws DanceObjectException {
         checkWriteDatabase(db);
 
         // If has not been put into database, just insert it into the database
@@ -91,9 +91,14 @@ public abstract class DanceObject extends BaseObject {
                 selection,
                 selectionArgs);
 
-        ActivityLog log = new ActivityLog(this, ActivityLog.ActivityTag.MODIFIED);
-        log.insertActivity(db);
+        if(addLog) {
+            ActivityLog log = logText != null ? new ActivityLog(this, logText) : new ActivityLog(this, ActivityLog.ActivityTag.MODIFIED);
+            log.insertActivity(db);
+        }
+    }
 
+    public void dbUpdate(SQLiteDatabase db, boolean addLog) throws DanceObjectException {
+        dbUpdate(db, addLog, null);
     }
 
     public abstract void isUpdateReady(SQLiteDatabase db) throws DanceObjectException;

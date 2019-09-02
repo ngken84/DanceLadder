@@ -162,7 +162,12 @@ public class Dance extends DanceObject {
 
     @Override
     public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
-
+        Dance dance = Dance.getDanceByName(db, null, name);
+        if(dance != null) {
+            if(dance.getId() != id) {
+                throw new DanceObjectException("Can't rename dance to match another dance's name.");
+            }
+        }
     }
 
     @Override
