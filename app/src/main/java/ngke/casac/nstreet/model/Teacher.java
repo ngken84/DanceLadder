@@ -12,6 +12,11 @@ import ngke.casac.nstreet.model.template.DanceObject;
 
 public class Teacher extends DanceObject {
 
+    public Teacher(String firstName, String lastName) {
+        this.firstName = firstName;
+        name = lastName;
+    }
+
     public Teacher(SQLiteDatabase db, Map<Long, Location> locationMap, Cursor cursor) {
         super(cursor);
         firstName = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_FIRST_NAME));
@@ -81,6 +86,34 @@ public class Teacher extends DanceObject {
         return null;
     }
 
+    public static Teacher getTeacherByName(SQLiteDatabase db, String firstName, String lastName) {
+        try {
+            checkReadableDatabase(db);
+
+            String[] projection = Contract.getProjection();
+            String selection = "UPPER(" + Contract.COL_FIRST_NAME + ") = UPPER(?) AND UPPER(" + Contract.COL_NAME + ") = UPPER(?)";
+            String[] selectionArgs = {firstName, lastName};
+
+            Cursor cursor = db.query(
+                    Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+
+            if(cursor.moveToNext()) {
+                return new Teacher(db, null, cursor);
+            } else {
+                return null;
+            }
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public boolean doesTeacherExist(SQLiteDatabase db) throws DanceObjectException {
         if(!isReadableDatabase(db)) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
@@ -130,6 +163,12 @@ public class Teacher extends DanceObject {
         if(location != null) {
             cv.put(Contract.COL_LOCATION_ID, location.getId());
         }
+    }
+
+    public static void deleteAllTeachers(SQLiteDatabase db) throws DanceObjectException {
+        checkWriteDatabase(db);
+
+        db.delete(Contract.TABLE_NAME, null, null);
     }
 
     public static class Contract extends ContractTemplate {

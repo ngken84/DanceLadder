@@ -117,7 +117,7 @@ public class LocationInstrumentedTest {
         return writeDB;
     }
 
-    private void compareLocations(Location l1, Location l2) {
+    public static void compareLocations(Location l1, Location l2) {
         if(l1 == null && l2 == null) {
             return;
         }
