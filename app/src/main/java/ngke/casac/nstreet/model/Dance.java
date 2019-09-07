@@ -250,9 +250,7 @@ public class Dance extends DanceObject {
     }
 
     public static void deleteAllDances(SQLiteDatabase db) throws DanceObjectException {
-        if(!isWriteDatabase(db)) {
-            throw new DanceObjectException(DanceObjectException.ERR_INVALID_DB);
-        }
+        checkWriteDatabase(db);
         db.delete(Contract.TABLE_NAME, null, null);
 
     }

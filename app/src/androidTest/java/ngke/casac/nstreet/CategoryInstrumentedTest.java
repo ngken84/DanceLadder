@@ -68,6 +68,23 @@ public class CategoryInstrumentedTest {
     }
 
     @Test
+    public void getCategoryByNameWorks() {
+        SQLiteDatabase db = getCleanDatabase();
+
+        Category c1 = new Category("Swing");
+
+        try {
+            c1.dbInsert(db);
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+        Category c2 = Category.getCategoryByName(db, "Swing");
+        assertNotNull(c2);
+        compareCategory(c1, c2);
+    }
+
+    @Test
     public void modifyCategoryWorks() {
         SQLiteDatabase db = getCleanDatabase();
 

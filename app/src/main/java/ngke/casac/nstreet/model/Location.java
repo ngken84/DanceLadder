@@ -11,6 +11,11 @@ import ngke.casac.nstreet.model.template.DanceObject;
 
 public class Location extends DanceObject {
 
+    public Location(String name) {
+        super();
+        this.name = name;
+    }
+
     public Location(Cursor cursor) {
         super(cursor);
         address = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_ADDRESS));
@@ -91,6 +96,43 @@ public class Location extends DanceObject {
         return null;
     }
 
+    public static Location getLocationByName(SQLiteDatabase db, String name) {
+        if(name == null || name.trim().length() == 0) {
+            return null;
+        }
+
+        try {
+            checkReadableDatabase(db);
+
+            String[] projection = Contract.getProjection();
+            String selection = "UPPER(" + Contract.COL_NAME + ") = UPPER(?)";
+            String[] selectionArgs = {name};
+
+            Cursor cursor = db.query(Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+
+            if(cursor.moveToNext()) {
+                return new Location(cursor);
+            }
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void deleteAllLocations(SQLiteDatabase db) throws DanceObjectException {
+
+        checkWriteDatabase(db);
+
+        db.delete(Contract.TABLE_NAME, null, null);
+
+    }
+
     @Override
     protected void updateContentValues(ContentValues cv) {
         cv.put(Contract.COL_ADDRESS, address);
@@ -111,7 +153,14 @@ public class Location extends DanceObject {
 
     @Override
     public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+        if(!isNameValid()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
 
+        Location location = Location.getLocationByName(db, name);
+        if(location != null && location.getId() != id) {
+            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
+        }
     }
 
     @Override
