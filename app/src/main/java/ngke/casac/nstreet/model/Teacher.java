@@ -157,7 +157,14 @@ public class Teacher extends DanceObject {
 
     @Override
     public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+        if(!isTeacherValid()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
 
+        Teacher teacher = Teacher.getTeacherByName(db, firstName, name);
+        if(teacher != null && teacher.getId() != id) {
+            throw new DanceObjectException(DanceObjectException.ERR_ALREADY_EXISTS);
+        }
     }
 
     @Override

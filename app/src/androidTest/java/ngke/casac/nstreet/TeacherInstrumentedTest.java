@@ -67,6 +67,81 @@ public class TeacherInstrumentedTest {
         compareTeachers(t1, t2);
     }
 
+    @Test
+    public void modifyTeacherWorks() {
+        SQLiteDatabase db = getClearedDatabase();
+
+        Teacher t1 = new Teacher("Tarah", "Mark");
+        t1.setEmail("dance2Much@gmail.com");
+        try {
+            t1.dbInsert(db);
+        } catch (DanceObjectException e) {
+            assertEquals("modifyTeacherWorks", "Insert t1");
+        }
+
+        t1.setFirstName("Nicole");
+        try {
+            t1.dbUpdate(db, true);
+        } catch (DanceObjectException e) {
+            assertEquals("modifyTeacherWorks", "Update t1");
+        }
+
+        Teacher t2 = Teacher.getTeacherById(db, null, t1.getId());
+        compareTeachers(t1, t2);
+
+    }
+
+    @Test
+    public void cantInsertDoubleTeacher() {
+        SQLiteDatabase db = getClearedDatabase();
+
+        Teacher t1 = new Teacher("Tom", "Lev");
+        try {
+            t1.dbInsert(db);
+        } catch (DanceObjectException e) {
+            assertEquals("cantInsertDoubleTeacher", "Insert t1");
+        }
+
+        Teacher t2 = new Teacher("Tom", "Lev");
+        try {
+            t2.dbInsert(db);
+            assertEquals("cantInsertDoubleTeacher", "Shouldn't Insert t2");
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Test
+    public void cantModifyTeacherToMatchExisting() {
+        SQLiteDatabase db = getClearedDatabase();
+
+        Teacher t1 = new Teacher("Tom", "Lev");
+        try {
+            t1.dbInsert(db);
+        } catch (DanceObjectException e) {
+            assertEquals("cantModifyTeacherToMatchExisting", "Insert t1");
+        }
+
+        Teacher t2 = new Teacher("Joe", "Blow");
+        try {
+            t2.dbInsert(db);
+        } catch (DanceObjectException e) {
+            assertEquals("cantModifyTeacherToMatchExisting", "Insert t2");
+        }
+
+        t2.setFirstName("Tom");
+        t2.setName("Lev");
+
+        try {
+            t2.dbUpdate(db, true);
+            assertEquals("cantModifyTeacherToMatchExisting", "Update Should Not Work");
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+
+
+    }
 
     private SQLiteDatabase getClearedDatabase() {
         Context appContext = InstrumentationRegistry.getTargetContext();
@@ -83,7 +158,7 @@ public class TeacherInstrumentedTest {
         return writeDB;
     }
 
-    private void compareTeachers(Teacher t1, Teacher t2) {
+    public static void compareTeachers(Teacher t1, Teacher t2) {
         if(t1 == null && t2 == null) {
             return;
         }
@@ -104,7 +179,6 @@ public class TeacherInstrumentedTest {
 
         compareDanceObjects(t1, t2);
     }
-
 
 
 
