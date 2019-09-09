@@ -34,7 +34,37 @@ public class TeacherInstrumentedTest {
         Teacher t2 = Teacher.getTeacherById(db, null, teacher.getId());
         compareTeachers(teacher, t2);
 
+        Teacher t3 = Teacher.getTeacherByName(db, "Christina", "Musser");
+        compareTeachers(t2, t3);
+    }
 
+    @Test
+    public void constructorAllParameters() {
+        SQLiteDatabase db = getClearedDatabase();
+
+        Teacher t1 = new Teacher("Christina", "Musser");
+
+        Location l1 = new Location("Spotlight Ballroom");
+        l1.setAddress("100 J Street");
+        l1.setCity("Sacramento");
+        l1.setState("CA");
+        l1.setZip("95814");
+
+        t1.setEmail("ChristinaMusser@gmail.com");
+        t1.setLocation(l1);
+        t1.setPhoneNumber("1-502-283-1983");
+
+        try {
+            t1.dbInsert(db);
+        } catch (DanceObjectException e) {
+            assertEquals("constructorAllParameters", "Insert");
+        }
+
+        Location l2 = Location.getLocationById(db, l1.getId());
+        compareLocations(l1, l2);
+
+        Teacher t2 = Teacher.getTeacherById(db, null, t1.getId());
+        compareTeachers(t1, t2);
     }
 
 

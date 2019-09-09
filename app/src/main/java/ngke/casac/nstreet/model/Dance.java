@@ -172,6 +172,10 @@ public class Dance extends DanceObject {
 
     @Override
     protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+        if(category != null && category.getId() == 0) {
+            category.dbInsert(db);
+        }
+
         if(!isNameValid()) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }

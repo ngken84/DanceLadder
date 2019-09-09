@@ -142,6 +142,11 @@ public class Teacher extends DanceObject {
 
     @Override
     protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+
+        if(location != null && location.getId() == 0) {
+            location.dbInsert(db);
+        }
+
         if(!isTeacherValid()) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
@@ -160,7 +165,7 @@ public class Teacher extends DanceObject {
         cv.put(Contract.COL_FIRST_NAME, firstName);
         cv.put(Contract.COL_EMAIL, email);
         cv.put(Contract.COL_PHONE, phoneNumber);
-        if(location != null) {
+        if(location != null && location.getId() != 0) {
             cv.put(Contract.COL_LOCATION_ID, location.getId());
         }
     }
