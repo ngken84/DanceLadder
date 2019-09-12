@@ -42,11 +42,7 @@ public class Lesson extends DanceObject {
                 }
                 teacher = t;
             }
-
         }
-
-
-
     }
 
     public static final String TYPE = "LESSON";
@@ -61,6 +57,14 @@ public class Lesson extends DanceObject {
 
     @Override
     protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
+        if(teacher != null && teacher.getId() == 0) {
+            teacher.dbInsert(db);
+        }
+
+        if(location != null && location.getId() == 0) {
+            location.dbInsert(db);
+        }
+
         if(startDateAndTime == null || duration == 0) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
@@ -88,6 +92,11 @@ public class Lesson extends DanceObject {
             cv.put(Contract.COL_TEACHER_ID, teacher.getId());
         }
 
+    }
+
+    public static void deleteAllLessons(SQLiteDatabase db) throws DanceObjectException {
+        checkWriteDatabase(db);
+        db.delete(Contract.TABLE_NAME, null,null);
     }
 
 
@@ -170,5 +179,9 @@ public class Lesson extends DanceObject {
 
     public void setDuration(int duration) {
         this.duration = duration;
+    }
+
+    public void setStartDateAndTime(DateAndTime startDateAndTime) {
+        this.startDateAndTime = startDateAndTime;
     }
 }
