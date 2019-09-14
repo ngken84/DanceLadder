@@ -14,6 +14,11 @@ import ngke.casac.nstreet.model.template.DanceObject;
 
 public class Lesson extends DanceObject {
 
+    public Lesson(Date date, int duration) {
+        startDateAndTime = new DateAndTime(date);
+        this.duration = duration;
+    }
+
     public Lesson(SQLiteDatabase db, Map<Long, Teacher> teacherMap, Map<Long, Location> locationMap, Cursor cursor) throws DanceObjectException {
         super(cursor);
 
@@ -43,6 +48,12 @@ public class Lesson extends DanceObject {
                 teacher = t;
             }
         }
+
+        duration = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_DURATION));
+        startDateAndTime = new DateAndTime(
+                cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_START_DATE)),
+                cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_START_TIME)));
+
     }
 
     public static final String TYPE = "LESSON";
@@ -54,6 +65,33 @@ public class Lesson extends DanceObject {
 
 
     // DATABASE FUNCTIONS
+
+    public static Lesson getLessonById(SQLiteDatabase db, long id) {
+        try {
+            checkReadableDatabase(db);
+
+            String[] projection = Contract.getProjection();
+            String selection = Contract._ID + " = ?";
+            String[] selectionArgs = {Long.toString(id)};
+
+            Cursor cursor = db.query(Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+
+            if(cursor.moveToNext()) {
+                return new Lesson(db, null, null, cursor);
+            } else {
+                return null;
+            }
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     @Override
     protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {

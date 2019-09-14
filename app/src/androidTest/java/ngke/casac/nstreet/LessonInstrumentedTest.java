@@ -6,6 +6,8 @@ import android.support.test.InstrumentationRegistry;
 
 import org.junit.Test;
 
+import java.util.Date;
+
 import ngke.casac.nstreet.database.DanceSQLHelper;
 import ngke.casac.nstreet.model.DanceObjectException;
 import ngke.casac.nstreet.model.Lesson;
@@ -22,6 +24,18 @@ public class LessonInstrumentedTest {
     @Test
     public void constructorWorks() {
         SQLiteDatabase db = getClearedDatabase();
+
+        Lesson l1 = new Lesson(new Date(), 30);
+
+        try {
+            l1.dbInsert(db);
+        } catch (DanceObjectException e) {
+            assertEquals("constructorWorks", e.getMessage());
+        }
+
+        Lesson l2 = Lesson.getLessonById(db, l1.getId());
+
+        compareLessons(l1, l2);
 
 
 
