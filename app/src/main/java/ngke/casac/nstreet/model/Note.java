@@ -8,13 +8,19 @@ import java.util.Date;
 import java.util.Map;
 
 import ngke.casac.nstreet.model.template.ContractTemplate;
+import ngke.casac.nstreet.model.template.DanceObject;
 import ngke.casac.nstreet.model.template.DanceSubItem;
 import ngke.casac.nstreet.model.template.SubItemContractTemplate;
 
-public class Note extends DanceSubItem {
+public class Note extends DanceObject {
 
-    public Note(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, Cursor cursor) throws DanceObjectException {
-        super(db, danceMap, categoryMap, cursor);
+    public Note(String note) {
+        super();
+        this.note = note;
+    }
+
+    public Note(Cursor cursor) throws DanceObjectException {
+        super(cursor);
 
         note = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_NOTE));
     }
@@ -25,7 +31,7 @@ public class Note extends DanceSubItem {
 
     // DATABASE FUNCTIONS
 
-    public static Note getNoteById(SQLiteDatabase db, Map<Long, Dance> danceMap, Map<Long, Category> categoryMap, long id) {
+    public static Note getNoteById(SQLiteDatabase db, long id) {
         try {
             checkReadableDatabase(db);
 
@@ -43,7 +49,7 @@ public class Note extends DanceSubItem {
 
             try {
                 if (cursor.moveToNext()) {
-                    return new Note(db, danceMap, categoryMap, cursor);
+                    return new Note(cursor);
                 }
             } finally {
                 cursor.close();
@@ -55,23 +61,35 @@ public class Note extends DanceSubItem {
     }
 
     @Override
-    protected void updateContentValuesForSubItem(ContentValues cv) {
-        cv.put(Contract.COL_NOTE, note);
-    }
-
-    @Override
     protected void isInsertReady(SQLiteDatabase db) throws DanceObjectException {
-        if(note == null || note.trim().isEmpty()) {
+        if(!isNoteValid()) {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
     }
 
     @Override
-    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+    protected void updateContentValues(ContentValues cv) {
 
     }
 
-    public static class Contract extends SubItemContractTemplate {
+    @Override
+    public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+        if(!isNoteValid()) {
+            throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
+        }
+    }
+
+    public boolean isNoteValid() {
+        return !(note == null || note.trim().isEmpty());
+    }
+
+    public static void deleteAllNotes(SQLiteDatabase db) throws DanceObjectException {
+        checkWriteDatabase(db);
+
+        db.delete(Contract.TABLE_NAME, null, null);
+    }
+
+    public static class Contract extends ContractTemplate {
 
         public static final String TABLE_NAME = "note_table";
         public static final String COL_NOTE = "note";
@@ -91,9 +109,7 @@ public class Note extends DanceSubItem {
                     COL_NOTE,
                     COL_DATE_CREATED,
                     COL_STARRED,
-                    COL_DATE_MODIFIED,
-                    COL_ORDER_NO,
-                    COL_RATING
+                    COL_DATE_MODIFIED
             };
             return projection;
         }
