@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.test.InstrumentationRegistry;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import ngke.casac.nstreet.database.DanceSQLHelper;
@@ -11,6 +12,7 @@ import ngke.casac.nstreet.model.DanceObjectException;
 import ngke.casac.nstreet.model.Note;
 
 import static junit.framework.TestCase.assertEquals;
+import static ngke.casac.nstreet.DanceInstrumentedTest.compareDanceObjects;
 
 public class NoteInstrumentedTest {
 
@@ -27,6 +29,7 @@ public class NoteInstrumentedTest {
         }
 
         Note n2 = Note.getNoteById(db, note.getId());
+        compareNotes(note, n2);
 
     }
 
@@ -43,7 +46,25 @@ public class NoteInstrumentedTest {
         return writeDB;
     }
 
+    public static void compareNotes(Note n1, Note n2) {
+        if(n1 == null && n2 == null) {
+            return;
+        }
 
+        if(n1 == null && n2 != null) {
+            Assert.assertEquals("L1 is null", "");
+            return;
+        }
+        if(n2 == null && n1 != null) {
+            Assert.assertEquals("L2 is null", "");
+            return;
+        }
+
+
+        assertEquals(n1.getNote(), n2.getNote());
+        compareDanceObjects(n1, n2);
+
+    }
 
 
 

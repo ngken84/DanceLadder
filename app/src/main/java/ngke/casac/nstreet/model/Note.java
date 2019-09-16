@@ -69,7 +69,7 @@ public class Note extends DanceObject {
 
     @Override
     protected void updateContentValues(ContentValues cv) {
-
+        cv.put(Contract.COL_NOTE, note);
     }
 
     @Override
