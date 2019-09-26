@@ -5,8 +5,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import ngke.casac.nstreet.model.subitemlists.DanceObjRelation;
 import ngke.casac.nstreet.model.template.ContractTemplate;
 import ngke.casac.nstreet.model.template.DanceObject;
 import ngke.casac.nstreet.model.template.DanceSubItem;
@@ -66,6 +69,33 @@ public class Note extends DanceObject {
             throw new DanceObjectException(DanceObjectException.ERR_INVALID_OBJECT);
         }
     }
+
+    public static void populateDanceObjRelList(SQLiteDatabase db, List<DanceObjRelation> list) throws DanceObjectException {
+        Map<Long, DanceObjRelation> map = new HashMap<>();
+        StringBuilder selection =  new StringBuilder();
+        String[] selectionArgs = getSelectionArgsForDorList(db, list, map, selection);
+
+        if(selectionArgs == null) {
+            return;
+        }
+
+        Cursor cursor = db.query(
+                Contract.TABLE_NAME,
+                Contract.getProjection(),
+                selection.toString(),
+                selectionArgs,
+                null,
+                null,
+                null
+        );
+
+
+        while(cursor.moveToNext()) {
+            Note note = new Note(cursor);
+            map.get(note.getId()).setObject(note);
+        }
+    }
+
 
     @Override
     protected void updateContentValues(ContentValues cv) {

@@ -14,6 +14,7 @@ import ngke.casac.nstreet.model.Lesson;
 import ngke.casac.nstreet.model.Location;
 import ngke.casac.nstreet.model.Note;
 import ngke.casac.nstreet.model.Teacher;
+import ngke.casac.nstreet.model.subitemlists.DanceObjRelation;
 
 public class DanceSQLHelper extends SQLiteOpenHelper {
 
@@ -37,6 +38,7 @@ public class DanceSQLHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(Location.Contract.getInitSQL());
         sqLiteDatabase.execSQL(ActivityLog.Contract.getInitSQL());
         sqLiteDatabase.execSQL(Drill.Contract.getInitSQL());
+        sqLiteDatabase.execSQL(DanceObjRelation.Contract.getInitSQL());
     }
 
     @Override
@@ -80,6 +82,10 @@ public class DanceSQLHelper extends SQLiteOpenHelper {
         //ActivityLog
         sqLiteDatabase.execSQL(ActivityLog.Contract.getDestroySQL());
         sqLiteDatabase.execSQL(ActivityLog.Contract.getInitSQL());
+
+        //DanceObjRelation
+        sqLiteDatabase.execSQL(DanceObjRelation.Contract.getDestroySQL());
+        sqLiteDatabase.execSQL(DanceObjRelation.Contract.getInitSQL());
 
     }
 }
