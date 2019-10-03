@@ -5,8 +5,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import ngke.casac.nstreet.model.subitemlists.DanceObjRelation;
 import ngke.casac.nstreet.model.template.DanceSubItem;
 import ngke.casac.nstreet.model.template.SubItemContractTemplate;
 
@@ -95,6 +98,39 @@ public class Drill extends DanceSubItem {
 
     @Override
     public void isUpdateReady(SQLiteDatabase db) throws DanceObjectException {
+
+    }
+
+    public static void populateDanceObjRelList(SQLiteDatabase db, Map<Long, Dance> danceMap,
+                                               Map<Long, Category> categoryMap,
+                                               List<DanceObjRelation> list) throws DanceObjectException {
+
+        Map<Long, Category> catMap = (categoryMap == null) ? new HashMap<Long, Category>() : categoryMap;
+        Map<Long, Dance> dMap = (danceMap == null) ? new HashMap<Long, Dance>() : danceMap;
+
+
+        Map<Long, DanceObjRelation> map = new HashMap<>();
+        StringBuilder selection =  new StringBuilder();
+        String[] selectionArgs = getSelectionArgsForDorList(db, list, map, selection);
+
+        if(selectionArgs == null) {
+            return;
+        }
+
+        Cursor cursor = db.query(
+                Contract.TABLE_NAME,
+                Contract.getProjection(),
+                selection.toString(),
+                selectionArgs,
+                null,
+                null,
+                null
+        );
+
+        while(cursor.moveToNext()) {
+            Drill drill = new Drill(db, dMap, catMap, cursor);
+            map.get(drill.getId()).setObject(drill);
+        }
 
     }
 

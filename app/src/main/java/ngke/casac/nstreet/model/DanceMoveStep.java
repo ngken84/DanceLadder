@@ -1,18 +1,35 @@
 package ngke.casac.nstreet.model;
 
+import android.database.Cursor;
 import android.provider.BaseColumns;
 
 import java.util.Comparator;
 
 public class DanceMoveStep {
 
-    private int id;
+    public DanceMoveStep(Cursor cursor) {
+        id = cursor.getLong(cursor.getColumnIndexOrThrow(Contract._ID));
+        order = cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_ORDER));
+        moveId = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.COL_MOVE_ID));
+        description = cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_DESC));
+
+        leaderFootwork = new MoveStepInstruction(cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_LEAD_START_FOOT)),
+                cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_LEAD_END_FOOT)),
+                cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_LEAD_INSTRUCTIONS)));
+
+        followerFootwork = new MoveStepInstruction(cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_FLW_START_FOOT)),
+                cursor.getInt(cursor.getColumnIndexOrThrow(Contract.COL_FLW_END_FOOT)),
+                cursor.getString(cursor.getColumnIndexOrThrow(Contract.COL_FLW_INSTRUCTIONS)));
+
+    }
+
+    private long id;
     private int order;
-    private int moveId;
+    private long moveId;
     private String description;
 
-    private MoveStepInstruction LeaderFootwork;
-    private MoveStepInstruction FollowerFootwork;
+    private MoveStepInstruction leaderFootwork;
+    private MoveStepInstruction followerFootwork;
 
     public static class Contract implements BaseColumns {
         public static final String TABLE_NAME = "dance_move_step_tbl";
@@ -61,11 +78,15 @@ public class DanceMoveStep {
         }
     }
 
-    public int getId() {
+
+
+    // GETTERS & SETTERS
+
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -77,11 +98,11 @@ public class DanceMoveStep {
         this.order = order;
     }
 
-    public int getMoveId() {
+    public long getMoveId() {
         return moveId;
     }
 
-    public void setMoveId(int moveId) {
+    public void setMoveId(long moveId) {
         this.moveId = moveId;
     }
 
@@ -94,19 +115,19 @@ public class DanceMoveStep {
     }
 
     public MoveStepInstruction getLeaderFootwork() {
-        return LeaderFootwork;
+        return leaderFootwork;
     }
 
     public void setLeaderFootwork(MoveStepInstruction leaderFootwork) {
-        LeaderFootwork = leaderFootwork;
+        this.leaderFootwork = leaderFootwork;
     }
 
     public MoveStepInstruction getFollowerFootwork() {
-        return FollowerFootwork;
+        return followerFootwork;
     }
 
     public void setFollowerFootwork(MoveStepInstruction followerFootwork) {
-        FollowerFootwork = followerFootwork;
+        this.followerFootwork = followerFootwork;
     }
 
     public static class DanceMoveStepComparator implements Comparator<DanceMoveStep> {

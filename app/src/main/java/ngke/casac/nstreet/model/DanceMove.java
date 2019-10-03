@@ -45,6 +45,36 @@ public class DanceMove extends DanceSubItem {
 
     // DATABASE FUNCTIONS
 
+    public static DanceMove getDanceMoveById(SQLiteDatabase db, Map<Long, Dance> danceMap,
+                                             Map<Long, Category> categoryMap, long id) {
+        try {
+            checkReadableDatabase(db);
+
+            String[] projection = Contract.getProjection();
+            String selection = Contract.COL_NAME + " = ?";
+            String[] selectionArgs = {Long.toString(id)};
+
+            Cursor cursor = db.query(Contract.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+
+            if(cursor.moveToNext()) {
+                DanceMove retval = new DanceMove(db, danceMap, categoryMap, cursor);
+                cursor.close();
+                return retval;
+            } else {
+                cursor.close();
+            }
+        } catch (DanceObjectException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     @Override
     protected void updateContentValuesForSubItem(ContentValues cv) {
         if(parentMoveId > 0) {
